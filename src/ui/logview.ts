@@ -19,7 +19,7 @@ export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.L
       label: {
         fg: 'blue',
       },
-    } as any,
+    },
     keys: true,
     vi: true,
     mouse: true,
@@ -27,8 +27,7 @@ export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.L
     alwaysScroll: true,
     scrollbar: {
       ch: '│',
-      style: 'blue',
-    } as any,
+    },
     scrollOnInput: false,
   });
 

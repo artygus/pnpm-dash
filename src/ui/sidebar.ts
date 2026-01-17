@@ -32,8 +32,8 @@ export function createSidebar(screen: blessed.Widgets.Screen): blessed.Widgets.L
       },
       label: {
         fg: 'blue',
-      },
-    } as any,
+      } as any // invalid type from @types/blessed :|
+    },
     keys: true,
     vi: true,
     mouse: true,
@@ -41,7 +41,6 @@ export function createSidebar(screen: blessed.Widgets.Screen): blessed.Widgets.L
     alwaysScroll: true,
     scrollbar: {
       ch: '│',
-      style: 'blue',
     },
     tags: true,
   });
