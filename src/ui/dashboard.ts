@@ -153,13 +153,11 @@ export class Dashboard {
     updateLogView(this.logView, this.getSelectedState(), this.state.autoScroll);
   }
 
-  private async quit(): Promise<void> {
+  async quit(): Promise<void> {
     await this.runner.stopAll();
 
-    setTimeout(() => {
-      this.screen.destroy();
-      process.exit(0);
-    }, 500);
+    this.screen.destroy();
+    process.exit(0);
   }
 
   start(): void {

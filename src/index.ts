@@ -46,6 +46,9 @@ async function main() {
 
   runner.start(filtered);
   dashboard.start();
+
+  process.on('SIGINT', async () => await dashboard.quit())
+  process.on('SIGTERM', async () => await dashboard.quit())
 }
 
 main().catch((error) => {

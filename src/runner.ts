@@ -1,4 +1,4 @@
-import { execa, ResultPromise } from 'execa';
+import { execa, type ResultPromise } from 'execa';
 import { EventEmitter } from 'node:events';
 import type { WorkspacePackage, PackageState } from './types.js';
 
@@ -26,11 +26,10 @@ export class Runner extends EventEmitter {
 
     if (state) {
       if (state.subprocess && state.subprocess.exitCode == null) {
-        console.error(`${pkg.name} subprocess is still running`, state!.subprocess!.pid)
+        console.error(`${pkg.name} subprocess is still running`, state!.subprocess!.pid);
         return;
-      } else {
-        state.status = 'running';
       }
+      state.status = 'running';
     } else {
       state = {
         package: pkg,
@@ -50,33 +49,48 @@ export class Runner extends EventEmitter {
       all: true,
       buffer: false,
       reject: false,
+      cleanup: false,
+      detached: true,
     });
 
     state.subprocess = subprocess;
-
     this.emit('start', pkg.name);
 
-    const handleLine = (line: string) => {
-      state.logs.push(line);
-      this.emit('log', pkg.name, line);
-    };
-
     subprocess.all.on('data', (data: Buffer) => {
-      data.toString().split('\n').forEach(handleLine);
+      const lines = data.toString().split('\n');
+      for (const line of lines) {
+        if (line) {
+          state.logs.push(line);
+          this.emit('log', pkg.name, line);
+        }
+      }
     });
 
     subprocess.then((result) => {
-      console.error('[subprocess] [then]', result.exitCode);
       state.status = result.exitCode === 0 ? 'success' : 'error';
       state.subprocess = null;
       this.emit('exit', pkg.name, result.exitCode ?? null);
     }).catch((error) => {
-      console.error('[subprocess] [catch]', error);
       state.status = 'error';
       state.logs.push(`Error: ${error.message}`);
       state.subprocess = null;
       this.emit('error', pkg.name, error);
     });
+  }
+
+  private killProcessGroup(pid: number, force: boolean = false): void {
+    const signal = force ? 'SIGKILL' : 'SIGTERM';
+
+    try {
+      process.kill(-pid, signal);
+    } catch {
+      // Negative pid will throw on windows, back to SIGTERM
+      try {
+        process.kill(pid, signal);
+      } catch {
+        // Ignore
+      }
+    }
   }
 
   async restartPackage(packageName: string): Promise<void> {
@@ -96,25 +110,27 @@ export class Runner extends EventEmitter {
   }
 
   async stopPackage(packageName: string): Promise<void> {
-    const subprocess = this.states.get(packageName)?.subprocess;
-    if (!subprocess) return;
+    const state = this.states.get(packageName);
+    const subprocess = state?.subprocess;
+    if (!subprocess?.pid) return;
 
-    subprocess.kill('SIGTERM');
+    const pid = subprocess.pid;
 
-    const killTimeout = setTimeout(() => {
-      subprocess.kill('SIGKILL');
-    }, 1000);
+    this.killProcessGroup(pid);
+    const forceKillTimeout = setTimeout(() => {
+      this.killProcessGroup(pid, true);
+    }, 2000);
 
     try {
       await subprocess;
     } finally {
-      clearTimeout(killTimeout);
+      clearTimeout(forceKillTimeout);
     }
   }
 
   async stopAll(): Promise<void> {
     await Promise.all(
-      Array.from(this.states.keys()).map((pkgName) => this.stopPackage(pkgName))
+      Array.from(this.states.keys()).map((name) => this.stopPackage(name))
     );
   }
 }
