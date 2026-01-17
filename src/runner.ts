@@ -1,9 +1,8 @@
-import { spawn, ChildProcess } from 'node:child_process';
+import { execa, ResultPromise } from 'execa';
 import { EventEmitter } from 'node:events';
-import type { WorkspacePackage, PackageState, RunnerEvents } from './types.js';
+import type { WorkspacePackage, PackageState } from './types.js';
 
 export class Runner extends EventEmitter {
-  private processes: Map<string, ChildProcess> = new Map();
   private states: Map<string, PackageState> = new Map();
   private scriptName: string;
 
@@ -23,111 +22,99 @@ export class Runner extends EventEmitter {
   }
 
   startPackage(pkg: WorkspacePackage): void {
-    const state: PackageState = {
-      package: pkg,
-      status: 'running',
-      process: null,
-      logs: [],
-      exitCode: null,
-    };
-    this.states.set(pkg.name, state);
+    let state = this.states.get(pkg.name);
 
-    const child = spawn('pnpm', ['run', this.scriptName], {
+    if (state) {
+      if (state.subprocess && state.subprocess.exitCode == null) {
+        console.error(`${pkg.name} subprocess is still running`, state!.subprocess!.pid)
+        return;
+      } else {
+        state.status = 'running';
+      }
+    } else {
+      state = {
+        package: pkg,
+        status: 'running',
+        subprocess: null,
+        logs: [],
+      };
+      this.states.set(pkg.name, state);
+    }
+
+    const subprocess = execa('pnpm', ['run', this.scriptName], {
       cwd: pkg.path,
-      shell: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
         FORCE_COLOR: '1',
       },
+      all: true,
+      buffer: false,
+      reject: false,
     });
 
-    state.process = child;
-    this.processes.set(pkg.name, child);
+    state.subprocess = subprocess;
 
     this.emit('start', pkg.name);
 
-    const handleData = (data: Buffer) => {
-      const lines = data.toString().split('\n');
-      for (const line of lines) {
-        if (line.trim()) {
-          state.logs.push(line);
-          this.emit('log', pkg.name, line);
-        }
-      }
+    const handleLine = (line: string) => {
+      state.logs.push(line);
+      this.emit('log', pkg.name, line);
     };
 
-    child.stdout?.on('data', handleData);
-    child.stderr?.on('data', handleData);
-
-    child.on('close', (code) => {
-      state.exitCode = code;
-      state.status = code === 0 ? 'success' : 'error';
-      state.process = null;
-      this.processes.delete(pkg.name);
-      this.emit('exit', pkg.name, code);
+    subprocess.all.on('data', (data: Buffer) => {
+      data.toString().split('\n').forEach(handleLine);
     });
 
-    child.on('error', (error) => {
+    subprocess.then((result) => {
+      console.error('[subprocess] [then]', result.exitCode);
+      state.status = result.exitCode === 0 ? 'success' : 'error';
+      state.subprocess = null;
+      this.emit('exit', pkg.name, result.exitCode ?? null);
+    }).catch((error) => {
+      console.error('[subprocess] [catch]', error);
       state.status = 'error';
       state.logs.push(`Error: ${error.message}`);
+      state.subprocess = null;
       this.emit('error', pkg.name, error);
     });
   }
 
-  restartPackage(packageName: string): void {
+  async restartPackage(packageName: string): Promise<void> {
     const state = this.states.get(packageName);
     if (!state) return;
 
-    this.stopPackage(packageName);
+    await this.stopPackage(packageName);
+    this.startPackage(state.package);
+  }
 
-    setTimeout(() => {
-      state.logs = [];
-      state.exitCode = null;
+  async restartAll(): Promise<void> {
+    await this.stopAll();
+
+    for (const state of this.states.values()) {
       this.startPackage(state.package);
-    }, 100);
-  }
-
-  restartAll(): void {
-    for (const [name] of this.states) {
-      this.restartPackage(name);
     }
   }
 
-  stopPackage(packageName: string): void {
-    const child = this.processes.get(packageName);
-    if (child) {
-      child.kill('SIGTERM');
-      setTimeout(() => {
-        if (child.killed === false) {
-          child.kill('SIGKILL');
-        }
-      }, 2000);
+  async stopPackage(packageName: string): Promise<void> {
+    const subprocess = this.states.get(packageName)?.subprocess;
+    if (!subprocess) return;
+
+    subprocess.kill('SIGTERM');
+
+    const killTimeout = setTimeout(() => {
+      subprocess.kill('SIGKILL');
+    }, 1000);
+
+    try {
+      await subprocess;
+    } finally {
+      clearTimeout(killTimeout);
     }
   }
 
-  stopAll(): void {
-    for (const [name, child] of this.processes) {
-      child.kill('SIGTERM');
-    }
-
-    setTimeout(() => {
-      for (const [name, child] of this.processes) {
-        if (child.killed === false) {
-          child.kill('SIGKILL');
-        }
-      }
-    }, 2000);
-  }
-
-  on<K extends keyof RunnerEvents>(event: K, listener: RunnerEvents[K]): this {
-    return super.on(event, listener);
-  }
-
-  emit<K extends keyof RunnerEvents>(
-    event: K,
-    ...args: Parameters<RunnerEvents[K]>
-  ): boolean {
-    return super.emit(event, ...args);
+  async stopAll(): Promise<void> {
+    await Promise.all(
+      Array.from(this.states.keys()).map((pkgName) => this.stopPackage(pkgName))
+    );
   }
 }

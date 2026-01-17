@@ -1,4 +1,4 @@
-import type { ChildProcess } from 'node:child_process';
+import type { ResultPromise } from 'execa';
 
 export interface WorkspacePackage {
   name: string;
@@ -11,9 +11,8 @@ export type PackageStatus = 'idle' | 'running' | 'success' | 'error';
 export interface PackageState {
   package: WorkspacePackage;
   status: PackageStatus;
-  process: ChildProcess | null;
+  subprocess: ResultPromise | null;
   logs: string[];
-  exitCode: number | null;
 }
 
 export interface DashboardState {
@@ -24,11 +23,4 @@ export interface DashboardState {
 
 export interface CLIOptions {
   filter?: string;
-}
-
-export interface RunnerEvents {
-  log: (packageName: string, line: string) => void;
-  exit: (packageName: string, code: number | null) => void;
-  error: (packageName: string, error: Error) => void;
-  start: (packageName: string) => void;
 }
