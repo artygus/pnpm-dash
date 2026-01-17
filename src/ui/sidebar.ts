@@ -4,8 +4,8 @@ import type { PackageState, PackageStatus } from '../types.js';
 const STATUS_ICONS: Record<PackageStatus, { icon: string; color: string }> = {
   idle: { icon: '○', color: 'gray' },
   running: { icon: '●', color: 'green' },
-  success: { icon: '●', color: 'blue' },
-  error: { icon: '●', color: 'red' },
+  success: { icon: '✓', color: 'blue' },
+  error: { icon: '✘', color: 'red' },
 };
 
 export function createSidebar(screen: blessed.Widgets.Screen): blessed.Widgets.ListElement {
@@ -42,7 +42,8 @@ export function createSidebar(screen: blessed.Widgets.Screen): blessed.Widgets.L
     scrollbar: {
       ch: '│',
       style: 'blue',
-    } as any,
+    },
+    tags: true,
   });
 
   return sidebar;
