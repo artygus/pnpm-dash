@@ -20,8 +20,6 @@ export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.L
         fg: 'blue',
       },
     },
-    keys: true,
-    vi: true,
     mouse: true,
     scrollable: true,
     alwaysScroll: true,
