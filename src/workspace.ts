@@ -17,7 +17,7 @@ export async function discoverWorkspace(cwd: string = process.cwd()): Promise<{
   const projects = await findWorkspacePackages(workspaceRoot);
 
   const packages: WorkspacePackage[] = projects
-    .filter((project) => project.manifest.name)
+    .filter((project) => project.manifest.name && project.rootDir !== workspaceRoot)
     .map((project) => ({
       name: project.manifest.name!,
       path: project.rootDir,
