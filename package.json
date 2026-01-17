@@ -1,0 +1,39 @@
+{
+  "name": "pnpm-dash",
+  "version": "0.1.0",
+  "description": "A TUI dashboard for pnpm workspaces - run scripts across packages with a split-pane interface",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "pnpm-dash": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node ./dist/index.js"
+  },
+  "keywords": [
+    "pnpm",
+    "monorepo",
+    "workspace",
+    "tui",
+    "dashboard",
+    "terminal"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@pnpm/find-workspace-dir": "^7.0.2",
+    "@pnpm/workspace.find-packages": "^4.0.5",
+    "blessed": "^0.1.81",
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/blessed": "^0.1.25",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
