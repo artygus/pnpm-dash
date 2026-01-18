@@ -39,8 +39,12 @@ export class Dashboard {
   }
 
   private setupKeyBindings(): void {
-    this.screen.key(['q', 'C-c'], () => {
+    this.screen.key(['S-q', 'C-c'], () => {
       this.quit();
+    });
+
+    this.screen.key(['q'], () => {
+      this.stopSelected();
     });
 
     this.screen.key(['j', 'down'], () => {
@@ -121,6 +125,13 @@ export class Dashboard {
       this.refreshSidebar();
       this.refreshLogView();
       this.screen.render();
+    }
+  }
+
+  private stopSelected(): void {
+    const name = this.getSelectedPackageName();
+    if (name) {
+      this.runner.stopPackage(name);
     }
   }
 
