@@ -110,17 +110,21 @@ export class Dashboard {
   private selectNext(): void {
     if (this.state.selectedIndex < this.packageNames.length - 1) {
       this.state.selectedIndex++;
-      this.refreshSidebar();
-      this.refreshLogView();
+    } else if (this.packageNames.length > 1) {
+      this.state.selectedIndex = 0;
     }
+    this.refreshSidebar();
+    this.refreshLogView();
   }
 
   private selectPrev(): void {
     if (this.state.selectedIndex > 0) {
       this.state.selectedIndex--;
-      this.refreshSidebar();
-      this.refreshLogView();
+    } else if (this.packageNames.length > 1) {
+      this.state.selectedIndex = this.packageNames.length - 1;
     }
+    this.refreshSidebar();
+    this.refreshLogView();
   }
 
   private clearSelected(): void {
