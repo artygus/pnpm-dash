@@ -20,7 +20,7 @@
     "dashboard",
     "terminal"
   ],
-  "author": "",
+  "author": "artygus",
   "license": "UNLICENSED",
   "dependencies": {
     "@pnpm/find-workspace-dir": "^7.0.2",
