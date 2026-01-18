@@ -1,6 +1,6 @@
 {
   "name": "pnpm-dash",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "A TUI dashboard for pnpm workspaces - run scripts across packages with a split-pane interface",
   "type": "module",
   "main": "./dist/index.js",
