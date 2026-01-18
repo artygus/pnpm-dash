@@ -1,6 +1,6 @@
 {
   "name": "pnpm-dash",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A TUI dashboard for pnpm workspaces - run scripts across packages with a split-pane interface",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,7 +21,7 @@
     "terminal"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "dependencies": {
     "@pnpm/find-workspace-dir": "^7.0.2",
     "@pnpm/workspace.find-packages": "^4.0.5",
