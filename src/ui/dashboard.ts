@@ -1,4 +1,4 @@
-import blessed from 'blessed';
+import blessed from 'reblessed';
 import { Runner } from '../runner.js';
 import type { WorkspacePackage, DashboardState } from '../types.js';
 import { createSidebar, updateSidebarItems } from './sidebar.js';

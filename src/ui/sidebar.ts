@@ -1,4 +1,4 @@
-import blessed from 'blessed';
+import blessed from 'reblessed';
 import type { PackageState, PackageStatus } from '../types.js';
 
 const STATUS_ICONS: Record<PackageStatus, { icon: string; color: string }> = {
@@ -36,7 +36,6 @@ export function createSidebar(screen: blessed.Widgets.Screen): blessed.Widgets.L
     },
     mouse: true,
     scrollable: true,
-    alwaysScroll: true,
     scrollbar: {
       ch: '│',
     },

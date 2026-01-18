@@ -1,4 +1,4 @@
-import blessed from 'blessed';
+import blessed from 'reblessed';
 
 export function createStatusBar(screen: blessed.Widgets.Screen): blessed.Widgets.BoxElement {
   const statusBar = blessed.box({

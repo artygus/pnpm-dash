@@ -25,9 +25,9 @@
   "dependencies": {
     "@pnpm/find-workspace-dir": "^7.0.2",
     "@pnpm/workspace.find-packages": "^4.0.5",
-    "blessed": "^0.1.81",
     "commander": "^13.1.0",
-    "execa": "^9.6.1"
+    "execa": "^9.6.1",
+    "reblessed": "^0.2.1"
   },
   "devDependencies": {
     "@types/blessed": "^0.1.25",

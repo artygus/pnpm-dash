@@ -1,4 +1,4 @@
-import blessed from 'blessed';
+import blessed from 'reblessed';
 import type { PackageState } from '../types.js';
 
 export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.Log {
@@ -34,6 +34,8 @@ export function updateLogView(
   state: PackageState | undefined,
   autoScroll: boolean
 ): void {
+  logView.setScroll(0);
+
   if (!state) {
     logView.setLabel(' Logs ');
     logView.setContent('');
