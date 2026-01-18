@@ -2,7 +2,7 @@ import blessed from 'reblessed';
 import { Runner } from '../runner.js';
 import type { WorkspacePackage, DashboardState } from '../types.js';
 import { createSidebar, updateSidebarItems } from './sidebar.js';
-import { createLogView, updateLogView, appendLog } from './logview.js';
+import { createLogView, updateLogView, appendLog, toggleLogAutoScroll } from './logview.js';
 import { createStatusBar, updateStatusBar } from './statusbar.js';
 
 export class Dashboard {
@@ -31,7 +31,7 @@ export class Dashboard {
     });
 
     this.sidebar = createSidebar(this.screen);
-    this.logView = createLogView(this.screen);
+    this.logView = createLogView(this.screen, this.state.autoScroll);
     this.statusBar = createStatusBar(this.screen);
 
     this.setupKeyBindings();
@@ -66,11 +66,6 @@ export class Dashboard {
     this.screen.key(['s'], () => {
       this.toggleAutoScroll();
     });
-
-    this.sidebar.on('select', (item, index) => {
-      this.state.selectedIndex = index;
-      this.refreshLogView();
-    });
   }
 
   private setupRunnerEvents(): void {
@@ -85,7 +80,6 @@ export class Dashboard {
         this.getSelectedPackageName(),
         packageName,
         line,
-        this.state.autoScroll
       );
       this.screen.render();
     });
@@ -115,7 +109,6 @@ export class Dashboard {
       this.state.selectedIndex++;
       this.refreshSidebar();
       this.refreshLogView();
-      this.screen.render();
     }
   }
 
@@ -124,7 +117,6 @@ export class Dashboard {
       this.state.selectedIndex--;
       this.refreshSidebar();
       this.refreshLogView();
-      this.screen.render();
     }
   }
 
@@ -148,6 +140,7 @@ export class Dashboard {
 
   private toggleAutoScroll(): void {
     this.state.autoScroll = !this.state.autoScroll;
+    toggleLogAutoScroll(this.logView, this.state.autoScroll);
     updateStatusBar(this.statusBar, this.state.autoScroll);
     this.screen.render();
   }
@@ -161,7 +154,7 @@ export class Dashboard {
   }
 
   private refreshLogView(): void {
-    updateLogView(this.logView, this.getSelectedState(), this.state.autoScroll);
+    updateLogView(this.logView, this.getSelectedState());
   }
 
   async quit(): Promise<void> {

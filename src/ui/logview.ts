@@ -1,7 +1,10 @@
 import blessed from 'reblessed';
 import type { PackageState } from '../types.js';
 
-export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.Log {
+export function createLogView(
+  screen: blessed.Widgets.Screen,
+  autoScroll: boolean,
+): blessed.Widgets.Log {
   const logView = blessed.log({
     parent: screen,
     label: ' Logs ',
@@ -24,6 +27,7 @@ export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.L
     scrollbar: {
       ch: '│',
     },
+    scrollOnInput: autoScroll,
   });
 
   return logView;
@@ -32,22 +36,17 @@ export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.L
 export function updateLogView(
   logView: blessed.Widgets.Log,
   state: PackageState | undefined,
-  autoScroll: boolean
 ): void {
-  logView.setScroll(0);
-
   if (!state) {
     logView.setLabel(' Logs ');
     logView.setContent('');
+    logView.setScroll(0);
     return;
   }
 
   logView.setLabel(` Logs - ${state.package.name} `);
   logView.setContent(state.logs.join('\n'));
-
-  if (autoScroll) {
-    logView.setScrollPerc(100);
-  }
+  logView.setScroll(0);
 }
 
 export function appendLog(
@@ -55,13 +54,19 @@ export function appendLog(
   currentPackage: string | undefined,
   packageName: string,
   line: string,
-  autoScroll: boolean
 ): void {
   if (currentPackage !== packageName) {
     return;
   }
 
   logView.add(line);
+}
+
+export function toggleLogAutoScroll(
+  logView: blessed.Widgets.Log,
+  autoScroll: boolean,
+): void {
+  logView.scrollOnInput = autoScroll;
 
   if (autoScroll) {
     logView.setScrollPerc(100);
