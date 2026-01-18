@@ -21,12 +21,9 @@ export function createLogView(screen: blessed.Widgets.Screen): blessed.Widgets.L
       },
     },
     mouse: true,
-    scrollable: true,
-    alwaysScroll: true,
     scrollbar: {
       ch: '│',
     },
-    scrollOnInput: false,
   });
 
   return logView;
@@ -37,18 +34,14 @@ export function updateLogView(
   state: PackageState | undefined,
   autoScroll: boolean
 ): void {
-  logView.setContent('');
-
   if (!state) {
     logView.setLabel(' Logs ');
+    logView.setContent('');
     return;
   }
 
   logView.setLabel(` Logs - ${state.package.name} `);
-
-  for (const line of state.logs) {
-    logView.add(line);
-  }
+  logView.setContent(state.logs.join('\n'));
 
   if (autoScroll) {
     logView.setScrollPerc(100);
@@ -62,10 +55,13 @@ export function appendLog(
   line: string,
   autoScroll: boolean
 ): void {
-  if (currentPackage === packageName) {
-    logView.add(line);
-    if (autoScroll) {
-      logView.setScrollPerc(100);
-    }
+  if (currentPackage !== packageName) {
+    return;
+  }
+
+  logView.add(line);
+
+  if (autoScroll) {
+    logView.setScrollPerc(100);
   }
 }
