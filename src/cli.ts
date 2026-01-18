@@ -17,8 +17,8 @@ export function parseCLI(): ParsedCLI {
     .version('0.1.0')
     .argument('<script>', 'Script name to run across workspace packages (e.g., dev, start)')
     .option(
-      '-F, --filter <pattern>',
-      'Filter packages by name pattern (supports * wildcard)'
+      '-F, --filter <pattern...>',
+      'Filter packages by name pattern, supports * for wildcard and ! for exclusions',
     )
     .parse();
 
@@ -29,6 +29,8 @@ export function parseCLI(): ParsedCLI {
     console.error('Error: Script name is required');
     console.error('Usage: pnpm-dash <script> [options]');
     console.error('Example: pnpm-dash dev');
+    console.error('Example: pnpm-dash dev -F "*abc"');
+    console.error('Example: pnpm-dash dev -F "!*def"');
     process.exit(1);
   }
 

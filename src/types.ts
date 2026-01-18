@@ -22,5 +22,5 @@ export interface DashboardState {
 }
 
 export interface CLIOptions {
-  filter?: string;
+  filter?: string[];
 }

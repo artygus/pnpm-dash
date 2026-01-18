@@ -25,11 +25,10 @@ async function main() {
   const filtered = filterPackages(packages, scriptName, options.filter);
 
   if (filtered.length === 0) {
-    console.error(
-      `No packages found with script "${scriptName}"${
-        options.filter ? ` matching filter "${options.filter}"` : ''
-      }`
-    );
+    const filterInfo = options.filter?.length
+      ? ` matching filters: ${options.filter.join(', ')}`
+      : '';
+    console.error(`No packages found with script "${scriptName}"${filterInfo}`);
     process.exit(1);
   }
 

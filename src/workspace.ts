@@ -27,26 +27,36 @@ export async function discoverWorkspace(cwd: string = process.cwd()): Promise<{
   return { root: workspaceRoot, packages };
 }
 
+function globMatch(name: string, pattern: string): boolean {
+  const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+  return regex.test(name);
+}
+
 export function filterPackages(
   packages: WorkspacePackage[],
   scriptName: string,
-  filterPattern?: string
+  filterPatterns?: string[]
 ): WorkspacePackage[] {
-  let filtered = packages.filter((pkg) => pkg.scripts[scriptName]);
+  let targetPgks = packages.filter((pkg) => pkg.scripts[scriptName]);
 
-  if (filterPattern) {
-    const pattern = filterPattern.toLowerCase();
-    filtered = filtered.filter((pkg) => {
-      const name = pkg.name.toLowerCase();
-      if (pattern.includes('*')) {
-        const regex = new RegExp(
-          '^' + pattern.replace(/\*/g, '.*') + '$'
-        );
-        return regex.test(name);
-      }
-      return name.includes(pattern);
-    });
+  if (!filterPatterns?.length) {
+    return targetPgks;
   }
 
-  return filtered;
+  const includePatterns = filterPatterns.filter((p) => !p.startsWith('!'));
+  const excludePatterns = filterPatterns.filter((p) => p.startsWith('!')).map((p) => p.slice(1));
+
+  if (includePatterns.length > 0) {
+    targetPgks = targetPgks.filter((pkg) =>
+      includePatterns.some((pattern) => globMatch(pkg.name, pattern))
+    );
+  }
+
+  if (excludePatterns.length > 0) {
+    targetPgks = targetPgks.filter((pkg) =>
+      !excludePatterns.some((pattern) => globMatch(pkg.name, pattern))
+    );
+  }
+
+  return targetPgks;
 }
