@@ -1,0 +1,5 @@
+node_modules
+dist
+tmp
+.vim
+.DS_Store
