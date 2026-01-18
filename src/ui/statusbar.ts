@@ -25,6 +25,8 @@ export function updateStatusBar(
 ): void {
   const scrollStatus = autoScroll ? 'ON' : 'OFF';
   statusBar.setContent(
-    ` {bold}Q{/bold}:exit  {bold}q{/bold}:quit task  {bold}r{/bold}:restart task  {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}s{/bold}:autoscroll [${scrollStatus}]`
+    ` {bold}Q{/bold}:exit  {bold}q{/bold}:quit task  {bold}r{/bold}:restart task ` +
+    ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}c{/bold}:clear ` +
+    ` {bold}s{/bold}:autoscroll [${scrollStatus}]`
   );
 }

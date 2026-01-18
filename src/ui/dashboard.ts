@@ -66,6 +66,10 @@ export class Dashboard {
     this.screen.key(['s'], () => {
       this.toggleAutoScroll();
     });
+
+    this.screen.key(['c'], () => {
+      this.clearSelected();
+    });
   }
 
   private setupRunnerEvents(): void {
@@ -81,7 +85,6 @@ export class Dashboard {
         packageName,
         line,
       );
-      this.screen.render();
     });
 
     this.runner.on('exit', (packageName, code) => {
@@ -116,6 +119,14 @@ export class Dashboard {
     if (this.state.selectedIndex > 0) {
       this.state.selectedIndex--;
       this.refreshSidebar();
+      this.refreshLogView();
+    }
+  }
+
+  private clearSelected(): void {
+    const state = this.getSelectedState();
+    if (state) {
+      state.logs = [];
       this.refreshLogView();
     }
   }
