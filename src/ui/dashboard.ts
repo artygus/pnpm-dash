@@ -2,7 +2,14 @@ import blessed from 'reblessed';
 import { Runner } from '../runner.js';
 import type { WorkspacePackage, DashboardState } from '../types.js';
 import { createSidebar, updateSidebarItems } from './sidebar.js';
-import { createLogView, updateLogView, appendLog, toggleLogAutoScroll } from './logview.js';
+import { 
+  createLogView, 
+  updateLogView, 
+  appendLog, 
+  toggleLogAutoScroll, 
+  expandLogView,
+  collapseLogView 
+} from './logview.js';
 import { createStatusBar, updateStatusBar } from './statusbar.js';
 
 export class Dashboard {
@@ -13,6 +20,7 @@ export class Dashboard {
   private runner: Runner;
   private state: DashboardState;
   private packageNames: string[] = [];
+  private copyMode: boolean = false;
 
   constructor(runner: Runner, packages: WorkspacePackage[]) {
     this.runner = runner;
@@ -69,6 +77,10 @@ export class Dashboard {
 
     this.screen.key(['c'], () => {
       this.clearSelected();
+    });
+
+    this.screen.key(['tab'], () => {
+      this.toggleCopyMode();
     });
   }
 
@@ -156,7 +168,22 @@ export class Dashboard {
   private toggleAutoScroll(): void {
     this.state.autoScroll = !this.state.autoScroll;
     toggleLogAutoScroll(this.logView, this.state.autoScroll);
-    updateStatusBar(this.statusBar, this.state.autoScroll);
+    updateStatusBar(this.statusBar, this.state.autoScroll, this.copyMode);
+    this.screen.render();
+  }
+
+  private toggleCopyMode(): void {
+    this.copyMode = !this.copyMode;
+
+    if (this.copyMode) {
+      this.sidebar.hide();
+      expandLogView(this.logView);
+    } else {
+      this.sidebar.show();
+      collapseLogView(this.logView);
+    }
+
+    updateStatusBar(this.statusBar, this.state.autoScroll, this.copyMode);
     this.screen.render();
   }
 
@@ -182,7 +209,7 @@ export class Dashboard {
   start(): void {
     this.refreshSidebar();
     this.refreshLogView();
-    this.sidebar.focus();
+    this.logView.focus();
     this.screen.render();
   }
 }
