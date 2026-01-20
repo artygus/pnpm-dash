@@ -72,3 +72,19 @@ export function toggleLogAutoScroll(
     logView.setScrollPerc(100);
   }
 }
+
+export function expandLogView(
+  logView: blessed.Widgets.Log,
+): void {
+  logView.left = 0;
+  logView.width = '100%';
+  logView.border = { type: 'line', top: true, left: false, right: false, bottom: false } as any;
+}
+
+export function shrinkLogView(
+  logView: blessed.Widgets.Log,
+): void {
+  logView.left = '25%';
+  logView.width = '75%';
+  logView.border = { type: 'line', top: true, left: true, right: true, bottom: true } as any;
+}

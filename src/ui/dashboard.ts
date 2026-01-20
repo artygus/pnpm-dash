@@ -2,7 +2,14 @@ import blessed from 'reblessed';
 import { Runner } from '../runner.js';
 import type { WorkspacePackage, DashboardState } from '../types.js';
 import { createSidebar, updateSidebarItems } from './sidebar.js';
-import { createLogView, updateLogView, appendLog, toggleLogAutoScroll } from './logview.js';
+import {
+  createLogView,
+  updateLogView,
+  appendLog,
+  toggleLogAutoScroll,
+  expandLogView,
+  shrinkLogView
+} from './logview.js';
 import { createStatusBar, updateStatusBar } from './statusbar.js';
 
 export class Dashboard {
@@ -22,6 +29,7 @@ export class Dashboard {
       packages: runner.getStates(),
       selectedIndex: 0,
       autoScroll: true,
+      sidebarHidden: false,
     };
 
     this.screen = blessed.screen({
@@ -69,6 +77,10 @@ export class Dashboard {
 
     this.screen.key(['c'], () => {
       this.clearSelected();
+    });
+
+    this.screen.key(['tab'], () => {
+      this.toggleSidebar();
     });
   }
 
@@ -160,6 +172,21 @@ export class Dashboard {
     this.screen.render();
   }
 
+  private toggleSidebar(): void {
+    this.state.sidebarHidden = !this.state.sidebarHidden;
+
+    if (this.state.sidebarHidden) {
+      this.sidebar.hide();
+      expandLogView(this.logView);
+    } else {
+      this.sidebar.show();
+      shrinkLogView(this.logView);
+    }
+
+    updateStatusBar(this.statusBar, this.state.autoScroll);
+    this.screen.render();
+  }
+
   private refreshSidebar(): void {
     updateSidebarItems(
       this.sidebar,
@@ -182,7 +209,7 @@ export class Dashboard {
   start(): void {
     this.refreshSidebar();
     this.refreshLogView();
-    this.sidebar.focus();
+    this.logView.focus();
     this.screen.render();
   }
 }

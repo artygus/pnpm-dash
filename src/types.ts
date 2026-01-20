@@ -19,6 +19,7 @@ export interface DashboardState {
   packages: Map<string, PackageState>;
   selectedIndex: number;
   autoScroll: boolean;
+  sidebarHidden: boolean;
 }
 
 export interface CLIOptions {
