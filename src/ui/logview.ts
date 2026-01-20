@@ -86,5 +86,5 @@ export function shrinkLogView(
 ): void {
   logView.left = '25%';
   logView.width = '75%';
-  logView.border = { type: 'line' };
+  logView.border = { type: 'line', top: true, left: true, right: true, bottom: true } as any;
 }
