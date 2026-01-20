@@ -81,7 +81,7 @@ export function expandLogView(
   logView.border = { type: 'line', top: true, left: false, right: false, bottom: false } as any;
 }
 
-export function collapseLogView(
+export function shrinkLogView(
   logView: blessed.Widgets.Log,
 ): void {
   logView.left = '25%';
