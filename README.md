@@ -1,6 +1,6 @@
 # pnpm-dash
 
-pnpm-dash is a terminal-based user interface (TUI) for pnpm, designed to provide a quick and interactive way to manage your pnpm workspace and packages.
+pnpm-dash is a terminal-based user interface (TUI) for pnpm run command
 
 ## Usage
 
