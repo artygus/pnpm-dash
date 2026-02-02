@@ -1,6 +1,9 @@
 import { execa, type ResultPromise } from 'execa';
 import { EventEmitter } from 'node:events';
 import type { WorkspacePackage, PackageState } from './types.js';
+import { RingBuffer } from './ringbuf.js';
+
+const MAX_LOG_LINES = 10000;
 
 export class Runner extends EventEmitter {
   private states: Map<string, PackageState> = new Map();
@@ -35,7 +38,7 @@ export class Runner extends EventEmitter {
         package: pkg,
         status: 'running',
         subprocess: null,
-        logs: [],
+        logs: new RingBuffer<string>(MAX_LOG_LINES),
       };
       this.states.set(pkg.name, state);
     }

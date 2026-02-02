@@ -1,4 +1,5 @@
 import type { ResultPromise } from 'execa';
+import type { RingBuffer } from './ringbuf.js';
 
 export interface WorkspacePackage {
   name: string;
@@ -12,7 +13,7 @@ export interface PackageState {
   package: WorkspacePackage;
   status: PackageStatus;
   subprocess: ResultPromise | null;
-  logs: string[];
+  logs: RingBuffer<string>;
 }
 
 export interface DashboardState {
