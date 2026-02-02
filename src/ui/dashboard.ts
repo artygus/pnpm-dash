@@ -142,7 +142,7 @@ export class Dashboard {
   private clearSelected(): void {
     const state = this.getSelectedState();
     if (state) {
-      state.logs = [];
+      state.logs.clear();
       this.refreshLogView();
     }
   }

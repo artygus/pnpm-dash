@@ -1,5 +1,6 @@
 import blessed from 'reblessed';
 import type { PackageState } from '../types.js';
+import { MAX_LOG_LINES } from '../constants.js';
 
 export function createLogView(
   screen: blessed.Widgets.Screen,
@@ -27,6 +28,7 @@ export function createLogView(
     scrollbar: {
       ch: '│',
     },
+    scrollback: MAX_LOG_LINES,
     scrollOnInput: autoScroll,
   });
 
@@ -45,7 +47,7 @@ export function updateLogView(
   }
 
   logView.setLabel(` Logs - ${state.package.name} `);
-  logView.setContent(state.logs.join('\n'));
+  logView.setContent(state.logs.toArray().join('\n'));
   logView.setScroll(0);
 }
 
