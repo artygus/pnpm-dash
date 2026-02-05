@@ -47,21 +47,8 @@ export function updateLogView(
   }
 
   logView.setLabel(` Logs - ${state.package.name} `);
-  logView.setContent(state.logs.toArray().join('\n'));
+  logView.setContent(state.logs.toArray().join('\n'), false, true);
   logView.setScroll(0);
-}
-
-export function appendLog(
-  logView: blessed.Widgets.Log,
-  currentPackage: string | undefined,
-  packageName: string,
-  line: string,
-): void {
-  if (currentPackage !== packageName) {
-    return;
-  }
-
-  logView.add(line);
 }
 
 export function toggleLogAutoScroll(
