@@ -188,13 +188,12 @@ export class Dashboard {
   private toggleAutoScroll(): void {
     this.state.autoScroll = !this.state.autoScroll;
     toggleLogAutoScroll(this.logView, this.state.autoScroll);
-    updateStatusBar(this.statusBar, this.state.autoScroll);
+    this.refreshStatusBar();
     this.needsRender = true;
   }
 
   private toggleSidebar(): void {
     this.state.sidebarHidden = !this.state.sidebarHidden;
-
     if (this.state.sidebarHidden) {
       this.sidebar.hide();
       expandLogView(this.logView);
@@ -202,8 +201,6 @@ export class Dashboard {
       this.sidebar.show();
       shrinkLogView(this.logView);
     }
-
-    updateStatusBar(this.statusBar, this.state.autoScroll);
     this.needsRender = true;
   }
 
@@ -217,6 +214,10 @@ export class Dashboard {
 
   private refreshLogView(): void {
     updateLogView(this.logView, this.getSelectedState());
+  }
+
+  private refreshStatusBar(): void {
+    updateStatusBar(this.statusbar, this.state.autoScroll);
   }
 
   async quit(): Promise<void> {
@@ -234,6 +235,8 @@ export class Dashboard {
   start(): void {
     this.refreshSidebar();
     this.refreshLogView();
+    this.refreshStatusBar();
+
     this.logView.focus();
     this.screen.render();
 
