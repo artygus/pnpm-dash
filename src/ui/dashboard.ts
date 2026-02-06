@@ -217,7 +217,7 @@ export class Dashboard {
   }
 
   private refreshStatusBar(): void {
-    updateStatusBar(this.statusbar, this.state.autoScroll);
+    updateStatusBar(this.statusBar, this.state.autoScroll);
   }
 
   async quit(): Promise<void> {

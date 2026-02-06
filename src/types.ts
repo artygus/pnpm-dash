@@ -1,4 +1,4 @@
-import type { ResultPromise } from 'execa';
+import type { ChildProcess } from 'node:child_process';
 import type { RingBuffer } from './ringbuf.js';
 
 export interface WorkspacePackage {
@@ -12,7 +12,7 @@ export type PackageStatus = 'idle' | 'running' | 'success' | 'error';
 export interface PackageState {
   package: WorkspacePackage;
   status: PackageStatus;
-  subprocess: ResultPromise | null;
+  subprocess: ChildProcess | null;
   logs: RingBuffer<string>;
 }
 
