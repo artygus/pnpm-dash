@@ -1,4 +1,4 @@
-import { execa, type ResultPromise } from 'execa';
+import { spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import type { WorkspacePackage, PackageState } from './types.js';
 import { RingBuffer } from './ringbuf.js';
@@ -28,7 +28,6 @@ export class Runner extends EventEmitter {
 
     if (state) {
       if (state.subprocess && state.subprocess.exitCode == null) {
-        console.error(`${pkg.name} subprocess is still running`, state!.subprocess!.pid);
         return;
       }
       state.status = 'running';
@@ -42,23 +41,21 @@ export class Runner extends EventEmitter {
       this.states.set(pkg.name, state);
     }
 
-    const subprocess = execa('pnpm', ['run', this.scriptName], {
+    const cmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+    const subprocess = spawn(cmd, ['run', this.scriptName], {
       cwd: pkg.path,
       env: {
         ...process.env,
         FORCE_COLOR: '1',
       },
-      all: true,
-      buffer: false,
-      reject: false,
-      cleanup: false,
+      stdio: ['ignore', 'pipe', 'pipe'],
       detached: true,
     });
 
     state.subprocess = subprocess;
     this.emit('start', pkg.name);
 
-    subprocess.all.on('data', (data: Buffer) => {
+    const handleData = (data: Buffer) => {
       const lines = data.toString().split('\n');
       for (const line of lines) {
         if (line) {
@@ -66,16 +63,24 @@ export class Runner extends EventEmitter {
           this.emit('log', pkg.name, line);
         }
       }
+    };
+
+    subprocess.stdout?.on('data', handleData);
+    subprocess.stderr?.on('data', handleData);
+
+    subprocess.on('close', (code) => {
+      state.status = code === 0 ? 'success' : 'error';
+      state.subprocess = null;
+      this.emit('exit', pkg.name, code);
     });
 
-    subprocess.then((result) => {
-      state.status = result.exitCode === 0 ? 'success' : 'error';
-      state.subprocess = null;
-      this.emit('exit', pkg.name, result.exitCode ?? null);
-    }).catch((error) => {
+    subprocess.on('error', (error) => {
       state.status = 'error';
-      state.logs.push(`Error: ${error.message}`);
       state.subprocess = null;
+
+      const logLine = `Error: ${error.message}`;
+      state.logs.push(logLine);
+      this.emit('log', pkg.name, logLine);
       this.emit('error', pkg.name, error);
     });
   }
@@ -118,16 +123,18 @@ export class Runner extends EventEmitter {
 
     const pid = subprocess.pid;
 
-    this.killProcessGroup(pid);
-    const forceKillTimeout = setTimeout(() => {
-      this.killProcessGroup(pid, true);
-    }, 2000);
+    return new Promise((resolve) => {
+      const forceKillTimeout = setTimeout(() => {
+        this.killProcessGroup(pid, true);
+      }, 2000);
 
-    try {
-      await subprocess;
-    } finally {
-      clearTimeout(forceKillTimeout);
-    }
+      subprocess.once('close', () => {
+        clearTimeout(forceKillTimeout);
+        resolve();
+      });
+
+      this.killProcessGroup(pid);
+    });
   }
 
   async stopAll(): Promise<void> {
