@@ -3,6 +3,7 @@ import type { PackageState } from '../types.js';
 
 export function createLogView(
   screen: blessed.Widgets.Screen,
+  autoScroll: boolean,
 ): blessed.Widgets.Log {
   const logView = blessed.log({
     parent: screen,
@@ -26,7 +27,7 @@ export function createLogView(
     scrollbar: {
       ch: '│',
     },
-    scrollOnInput: true,
+    scrollOnInput: autoScroll,
   });
 
   return logView;
@@ -46,6 +47,17 @@ export function updateLogView(
   logView.setLabel(` Logs - ${state.package.name} `);
   logView.setContent(state.logs.toArray().join('\n'));
   logView.setScroll(0);
+}
+
+export function toggleLogAutoScroll(
+  logView: blessed.Widgets.Log,
+  autoScroll: boolean,
+): void {
+  logView.scrollOnInput = autoScroll;
+
+  if (autoScroll) {
+    logView.setScrollPerc(100);
+  }
 }
 
 export function expandLogView(

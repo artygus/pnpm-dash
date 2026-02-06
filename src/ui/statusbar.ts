@@ -14,17 +14,21 @@ export function createStatusBar(screen: blessed.Widgets.Screen): blessed.Widgets
     tags: true,
   });
 
-  updateStatusBar(statusBar);
+  updateStatusBar(statusBar, true);
 
   return statusBar;
 }
 
 export function updateStatusBar(
   statusBar: blessed.Widgets.BoxElement,
+  autoScroll: boolean,
 ): void {
+  const scrollStatus = autoScroll ? 'ON' : 'OFF';
+
   statusBar.setContent(
     ` {bold}Q{/bold}:exit  {bold}tab{/bold}:toggle sidebar ` +
     ` {bold}q{/bold}:quit task  {bold}r{/bold}:restart task ` +
-    ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}c{/bold}:clear `
+    ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}c{/bold}:clear ` +
+    ` {bold}s{/bold}:autoscroll [${scrollStatus}] `
   );
 }

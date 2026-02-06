@@ -5,6 +5,7 @@ import { createSidebar, updateSidebarItems } from './sidebar.js';
 import {
   createLogView,
   updateLogView,
+  toggleLogAutoScroll,
   expandLogView,
   shrinkLogView
 } from './logview.js';
@@ -31,6 +32,7 @@ export class Dashboard {
     this.state = {
       packages: runner.getStates(),
       selectedIndex: 0,
+      autoScroll: true,
       sidebarHidden: false,
     };
 
@@ -41,7 +43,7 @@ export class Dashboard {
     });
 
     this.sidebar = createSidebar(this.screen);
-    this.logView = createLogView(this.screen);
+    this.logView = createLogView(this.screen, this.state.autoScroll);
     this.statusBar = createStatusBar(this.screen);
 
     this.setupKeyBindings();
@@ -71,6 +73,10 @@ export class Dashboard {
 
     this.screen.key(['S-r'], () => {
       this.restartAll();
+    });
+
+    this.screen.key(['s'], () => {
+      this.toggleAutoScroll();
     });
 
     this.screen.key(['c'], () => {
@@ -177,6 +183,13 @@ export class Dashboard {
     this.runner.restartAll();
   }
 
+  private toggleAutoScroll(): void {
+    this.state.autoScroll = !this.state.autoScroll;
+    toggleLogAutoScroll(this.logView, this.state.autoScroll);
+    updateStatusBar(this.statusBar, this.state.autoScroll);
+    this.needsRender = true;
+  }
+
   private toggleSidebar(): void {
     this.state.sidebarHidden = !this.state.sidebarHidden;
 
@@ -188,7 +201,7 @@ export class Dashboard {
       shrinkLogView(this.logView);
     }
 
-    updateStatusBar(this.statusBar);
+    updateStatusBar(this.statusBar, this.state.autoScroll);
     this.needsRender = true;
   }
 
