@@ -12,6 +12,8 @@ import {
 } from './logview.js';
 import { createStatusBar, updateStatusBar } from './statusbar.js';
 
+const RENDER_INTERVAL = 33;
+
 export class Dashboard {
   private screen: blessed.Widgets.Screen;
   private sidebar: blessed.Widgets.ListElement;
@@ -20,6 +22,9 @@ export class Dashboard {
   private runner: Runner;
   private state: DashboardState;
   private packageNames: string[] = [];
+  private renderTimer: ReturnType<typeof setInterval> | null = null;
+  private needsRender: boolean = false;
+  private pendingLogs: string[] = [];
 
   constructor(runner: Runner, packages: WorkspacePackage[]) {
     this.runner = runner;
@@ -87,27 +92,37 @@ export class Dashboard {
   private setupRunnerEvents(): void {
     this.runner.on('start', (packageName) => {
       this.refreshSidebar();
-      this.screen.render();
+      this.needsRender = true;
     });
 
     this.runner.on('log', (packageName, line) => {
-      appendLog(
-        this.logView,
-        this.getSelectedPackageName(),
-        packageName,
-        line,
-      );
+      if (packageName === this.getSelectedPackageName()) {
+        this.pendingLogs.push(line);
+        this.needsRender = true;
+      }
     });
 
     this.runner.on('exit', (packageName, code) => {
       this.refreshSidebar();
-      this.screen.render();
+      this.needsRender = true;
     });
 
     this.runner.on('error', (packageName, error) => {
       this.refreshSidebar();
-      this.screen.render();
+      this.needsRender = true;
     });
+  }
+
+  private flushRender(): void {
+    if (this.pendingLogs.length > 0) {
+      appendLog(this.logView, this.pendingLogs);
+      this.pendingLogs = [];
+    }
+
+    if (this.needsRender) {
+      this.screen.render();
+      this.needsRender = false;
+    }
   }
 
   private getSelectedPackageName(): string | undefined {
@@ -127,6 +142,8 @@ export class Dashboard {
     }
     this.refreshSidebar();
     this.refreshLogView();
+    this.pendingLogs = [];
+    this.needsRender = true;
   }
 
   private selectPrev(): void {
@@ -137,6 +154,8 @@ export class Dashboard {
     }
     this.refreshSidebar();
     this.refreshLogView();
+    this.pendingLogs = [];
+    this.needsRender = true;
   }
 
   private clearSelected(): void {
@@ -144,6 +163,7 @@ export class Dashboard {
     if (state) {
       state.logs.clear();
       this.refreshLogView();
+      this.needsRender = true;
     }
   }
 
@@ -169,7 +189,7 @@ export class Dashboard {
     this.state.autoScroll = !this.state.autoScroll;
     toggleLogAutoScroll(this.logView, this.state.autoScroll);
     updateStatusBar(this.statusBar, this.state.autoScroll);
-    this.screen.render();
+    this.needsRender = true;
   }
 
   private toggleSidebar(): void {
@@ -184,7 +204,7 @@ export class Dashboard {
     }
 
     updateStatusBar(this.statusBar, this.state.autoScroll);
-    this.screen.render();
+    this.needsRender = true;
   }
 
   private refreshSidebar(): void {
@@ -200,6 +220,11 @@ export class Dashboard {
   }
 
   async quit(): Promise<void> {
+    if (this.renderTimer) {
+      clearInterval(this.renderTimer);
+      this.renderTimer = null;
+    }
+
     await this.runner.stopAll();
 
     this.screen.destroy();
@@ -211,5 +236,7 @@ export class Dashboard {
     this.refreshLogView();
     this.logView.focus();
     this.screen.render();
+
+    this.renderTimer = setInterval(() => this.flushRender(), RENDER_INTERVAL);
   }
 }

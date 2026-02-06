@@ -14,8 +14,6 @@ export function createStatusBar(screen: blessed.Widgets.Screen): blessed.Widgets
     tags: true,
   });
 
-  updateStatusBar(statusBar, true);
-
   return statusBar;
 }
 

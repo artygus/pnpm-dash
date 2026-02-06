@@ -53,15 +53,9 @@ export function updateLogView(
 
 export function appendLog(
   logView: blessed.Widgets.Log,
-  currentPackage: string | undefined,
-  packageName: string,
-  line: string,
+  lines: string[],
 ): void {
-  if (currentPackage !== packageName) {
-    return;
-  }
-
-  logView.add(line);
+  logView.add(lines.join("\n"));
 }
 
 export function toggleLogAutoScroll(
