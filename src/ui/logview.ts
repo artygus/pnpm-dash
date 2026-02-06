@@ -44,7 +44,7 @@ export function updateLogView(
   }
 
   logView.setLabel(` Logs - ${state.package.name} `);
-  logView.setContent(state.logs.toArray().join('\n'), false, true);
+  logView.setContent(state.logs.toArray().join('\n'));
   logView.setScroll(0);
 }
 
