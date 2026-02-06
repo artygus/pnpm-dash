@@ -11,7 +11,7 @@ import {
 } from './logview.js';
 import { createStatusBar, updateStatusBar } from './statusbar.js';
 
-const RENDER_INTERVAL = 16; // ~60fps
+const RENDER_INTERVAL = 33;
 
 export class Dashboard {
   private screen: blessed.Widgets.Screen;

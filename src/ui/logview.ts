@@ -1,6 +1,5 @@
 import blessed from 'reblessed';
 import type { PackageState } from '../types.js';
-import { MAX_LOG_LINES } from '../constants.js';
 
 export function createLogView(
   screen: blessed.Widgets.Screen,
@@ -28,7 +27,6 @@ export function createLogView(
     scrollbar: {
       ch: '│',
     },
-    scrollback: MAX_LOG_LINES,
     scrollOnInput: autoScroll,
   });
 
