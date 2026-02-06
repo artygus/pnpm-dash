@@ -5,6 +5,7 @@ import { createSidebar, updateSidebarItems } from './sidebar.js';
 import {
   createLogView,
   updateLogView,
+  appendLog,
   toggleLogAutoScroll,
   expandLogView,
   shrinkLogView
@@ -23,7 +24,7 @@ export class Dashboard {
   private packageNames: string[] = [];
   private renderTimer: ReturnType<typeof setInterval> | null = null;
   private needsRender: boolean = false;
-  private pendingLogs: boolean = false;
+  private pendingLogs: string[] = [];
 
   constructor(runner: Runner, packages: WorkspacePackage[]) {
     this.runner = runner;
@@ -96,7 +97,7 @@ export class Dashboard {
 
     this.runner.on('log', (packageName, line) => {
       if (packageName === this.getSelectedPackageName()) {
-        this.pendingLogs = true;
+        this.pendingLogs.push(line);
         this.needsRender = true;
       }
     });
@@ -113,9 +114,9 @@ export class Dashboard {
   }
 
   private flushRender(): void {
-    if (this.pendingLogs) {
-      this.refreshLogView();
-      this.pendingLogs = false;
+    if (this.pendingLogs.length > 0) {
+      appendLog(this.logView, this.pendingLogs);
+      this.pendingLogs = [];
     }
 
     if (this.needsRender) {
@@ -141,7 +142,7 @@ export class Dashboard {
     }
     this.refreshSidebar();
     this.refreshLogView();
-    this.pendingLogs = false;
+    this.pendingLogs = [];
     this.needsRender = true;
   }
 
@@ -153,7 +154,7 @@ export class Dashboard {
     }
     this.refreshSidebar();
     this.refreshLogView();
-    this.pendingLogs = false;
+    this.pendingLogs = [];
     this.needsRender = true;
   }
 
@@ -162,6 +163,7 @@ export class Dashboard {
     if (state) {
       state.logs.clear();
       this.refreshLogView();
+      this.needsRender = true;
     }
   }
 
@@ -235,8 +237,6 @@ export class Dashboard {
     this.logView.focus();
     this.screen.render();
 
-    this.renderTimer = setInterval(() => {
-      this.flushRender();
-    }, RENDER_INTERVAL);
+    this.renderTimer = setInterval(() => this.flushRender(), RENDER_INTERVAL);
   }
 }
