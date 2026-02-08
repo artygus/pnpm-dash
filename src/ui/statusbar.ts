@@ -1,32 +1,31 @@
 import blessed from 'reblessed';
 
-export function createStatusBar(screen: blessed.Widgets.Screen): blessed.Widgets.BoxElement {
-  const statusBar = blessed.box({
-    parent: screen,
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    height: 1,
-    style: {
-      bg: 'blue',
-      fg: 'white',
-    },
-    tags: true,
-  });
+export class StatusBar {
+  private element: blessed.Widgets.BoxElement;
 
-  return statusBar;
-}
+  constructor(screen: blessed.Widgets.Screen) {
+    this.element = blessed.box({
+      parent: screen,
+      bottom: 0,
+      left: 0,
+      width: '100%',
+      height: 1,
+      style: {
+        bg: 'blue',
+        fg: 'white',
+      },
+      tags: true,
+    });
+  }
 
-export function updateStatusBar(
-  statusBar: blessed.Widgets.BoxElement,
-  autoScroll: boolean,
-): void {
-  const scrollStatus = autoScroll ? 'ON' : 'OFF';
+  update(autoScroll: boolean): void {
+    const scrollStatus = autoScroll ? 'ON' : 'OFF';
 
-  statusBar.setContent(
-    ` {bold}Q{/bold}:exit  {bold}tab{/bold}:toggle sidebar ` +
-    ` {bold}q{/bold}:quit task  {bold}r{/bold}:restart task ` +
-    ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}u/d{/bold}:scroll  {bold}c{/bold}:clear ` +
-    ` {bold}s{/bold}:autoscroll [${scrollStatus}] `
-  );
+    this.element.setContent(
+      ` {bold}Q{/bold}:exit  {bold}tab{/bold}:toggle sidebar ` +
+      ` {bold}q{/bold}:quit task  {bold}r{/bold}:restart task ` +
+      ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}u/d{/bold}:scroll  {bold}c{/bold}:clear ` +
+      ` {bold}s{/bold}:autoscroll [${scrollStatus}] `
+    );
+  }
 }

@@ -8,55 +8,61 @@ const STATUS_ICONS: Record<PackageStatus, { icon: string; color: string }> = {
   error: { icon: '✘', color: 'red' },
 };
 
-export function createSidebar(screen: blessed.Widgets.Screen): blessed.Widgets.ListElement {
-  const sidebar = blessed.list({
-    parent: screen,
-    label: ' Packages ',
-    left: 0,
-    top: 0,
-    width: '25%',
-    height: '100%-1',
-    border: {
-      type: 'line',
-    },
-    style: {
+export class Sidebar {
+  private element: blessed.Widgets.ListElement;
+
+  constructor(screen: blessed.Widgets.Screen) {
+    this.element = blessed.list({
+      parent: screen,
+      label: ' Packages ',
+      left: 0,
+      top: 0,
+      width: '25%',
+      height: '100%-1',
       border: {
-        fg: 'blue',
+        type: 'line',
       },
-      selected: {
-        bg: 'blue',
-        fg: 'white',
+      style: {
+        border: {
+          fg: 'blue',
+        },
+        selected: {
+          bg: 'blue',
+          fg: 'white',
+        },
+        item: {
+          fg: 'white',
+        },
+        label: {
+          fg: 'blue',
+        } as any,
       },
-      item: {
-        fg: 'white',
+      mouse: false,
+      scrollable: true,
+      scrollbar: {
+        ch: '│',
       },
-      label: {
-        fg: 'blue',
-      } as any // invalid type from @types/blessed :|
-    },
-    mouse: false,
-    scrollable: true,
-    scrollbar: {
-      ch: '│',
-    },
-    tags: true,
-  });
-
-  return sidebar;
-}
-
-export function updateSidebarItems(
-  sidebar: blessed.Widgets.ListElement,
-  states: Map<string, PackageState>,
-  selectedIndex: number
-): void {
-  const items: string[] = [];
-
-  for (const [name, state] of states) {
-    const { icon, color } = STATUS_ICONS[state.status];
-    items.push(`{${color}-fg}${icon}{/${color}-fg} ${name}`);
+      tags: true,
+    });
   }
 
-  sidebar.setItems(items);
-  sidebar.select(selectedIndex);
+  updateItems(states: Map<string, PackageState>, selectedIndex: number): void {
+    const items: string[] = [];
+
+    for (const [name, state] of states) {
+      const { icon, color } = STATUS_ICONS[state.status];
+      items.push(`{${color}-fg}${icon}{/${color}-fg} ${name}`);
+    }
+
+    this.element.setItems(items);
+    this.element.select(selectedIndex);
+  }
+
+  show(): void {
+    this.element.show();
+  }
+
+  hide(): void {
+    this.element.hide();
+  }
 }

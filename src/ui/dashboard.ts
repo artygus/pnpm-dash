@@ -1,26 +1,17 @@
 import blessed from 'reblessed';
 import { Runner } from '../runner.js';
 import type { WorkspacePackage, DashboardState } from '../types.js';
-import { createSidebar, updateSidebarItems } from './sidebar.js';
-import {
-  createLogView,
-  updateLogView,
-  appendLog,
-  toggleLogAutoScroll,
-  expandLogView,
-  shrinkLogView,
-  scrollLogLine,
-  scrollLogPage,
-} from './logview.js';
-import { createStatusBar, updateStatusBar } from './statusbar.js';
+import { Sidebar } from './sidebar.js';
+import { LogView } from './logview.js';
+import { StatusBar } from './statusbar.js';
 
 const RENDER_INTERVAL = 33;
 
 export class Dashboard {
   private screen: blessed.Widgets.Screen;
-  private sidebar: blessed.Widgets.ListElement;
-  private logView: blessed.Widgets.Log;
-  private statusBar: blessed.Widgets.BoxElement;
+  private sidebar: Sidebar;
+  private logView: LogView;
+  private statusBar: StatusBar;
   private runner: Runner;
   private state: DashboardState;
   private packageNames: string[] = [];
@@ -45,9 +36,9 @@ export class Dashboard {
       fullUnicode: true,
     });
 
-    this.sidebar = createSidebar(this.screen);
-    this.logView = createLogView(this.screen, this.state.autoScroll);
-    this.statusBar = createStatusBar(this.screen);
+    this.sidebar = new Sidebar(this.screen);
+    this.logView = new LogView(this.screen, this.state.autoScroll);
+    this.statusBar = new StatusBar(this.screen);
 
     this.setupKeyBindings();
     this.setupRunnerEvents();
@@ -133,7 +124,7 @@ export class Dashboard {
 
   private flushRender(): void {
     if (this.pendingLogs.length > 0) {
-      appendLog(this.logView, this.pendingLogs);
+      this.logView.appendLines(this.pendingLogs);
       this.pendingLogs = [];
     }
 
@@ -180,7 +171,7 @@ export class Dashboard {
     const state = this.getSelectedState();
     if (state) {
       state.logs.clear();
-      this.refreshLogView();
+      this.logView.clearLogs();
       this.needsRender = true;
     }
   }
@@ -205,8 +196,8 @@ export class Dashboard {
 
   private toggleAutoScroll(): void {
     this.state.autoScroll = !this.state.autoScroll;
-    toggleLogAutoScroll(this.logView, this.state.autoScroll);
-    this.refreshStatusBar();
+    this.logView.setAutoScroll(this.state.autoScroll);
+    this.statusBar.update(this.state.autoScroll);
     this.needsRender = true;
   }
 
@@ -214,48 +205,47 @@ export class Dashboard {
     this.state.sidebarHidden = !this.state.sidebarHidden;
     if (this.state.sidebarHidden) {
       this.sidebar.hide();
-      expandLogView(this.logView);
+      this.logView.expand();
     } else {
       this.sidebar.show();
-      shrinkLogView(this.logView);
+      this.logView.shrink();
     }
     this.needsRender = true;
   }
 
   private scrollLogUp(): void {
-    scrollLogLine(this.logView, -1);
+    this.logView.scrollLine(-1);
     this.needsRender = true;
   }
 
   private scrollLogDown(): void {
-    scrollLogLine(this.logView, 1);
+    this.logView.scrollLine(1);
     this.needsRender = true;
   }
 
   private scrollLogPageUp(): void {
-    scrollLogPage(this.logView, -1);
+    this.logView.scrollPage(-1);
     this.needsRender = true;
   }
 
   private scrollLogPageDown(): void {
-    scrollLogPage(this.logView, 1);
+    this.logView.scrollPage(1);
     this.needsRender = true;
   }
 
   private refreshSidebar(): void {
-    updateSidebarItems(
-      this.sidebar,
+    this.sidebar.updateItems(
       this.state.packages,
       this.state.selectedIndex
     );
   }
 
   private refreshLogView(): void {
-    updateLogView(this.logView, this.getSelectedState());
+    this.logView.updateState(this.getSelectedState());
   }
 
   private refreshStatusBar(): void {
-    updateStatusBar(this.statusBar, this.state.autoScroll);
+    this.statusBar.update(this.state.autoScroll);
   }
 
   async quit(): Promise<void> {

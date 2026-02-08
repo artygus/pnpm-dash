@@ -2,100 +2,88 @@ import blessed from 'reblessed';
 import type { PackageState } from '../types.js';
 import { MAX_LOG_LINES } from '../constants.js';
 
-export function createLogView(
-  screen: blessed.Widgets.Screen,
-  autoScroll: boolean,
-): blessed.Widgets.Log {
-  const logView = blessed.log({
-    parent: screen,
-    label: ' Logs ',
-    left: '25%',
-    top: 0,
-    width: '75%',
-    height: '100%-1',
-    border: {
-      type: 'line',
-    },
-    style: {
+export class LogView {
+  private element: blessed.Widgets.Log;
+
+  constructor(screen: blessed.Widgets.Screen, autoScroll: boolean) {
+    this.element = blessed.log({
+      parent: screen,
+      label: ' Logs ',
+      left: '25%',
+      top: 0,
+      width: '75%',
+      height: '100%-1',
       border: {
-        fg: 'blue',
+        type: 'line',
       },
-      label: {
-        fg: 'blue',
+      style: {
+        border: {
+          fg: 'blue',
+        },
+        label: {
+          fg: 'blue',
+        },
       },
-    },
-    mouse: true,
-    scrollbar: {
-      ch: '│',
-    },
-    scrollback: MAX_LOG_LINES,
-    scrollOnInput: autoScroll,
-  });
-
-  return logView;
-}
-
-export function updateLogView(
-  logView: blessed.Widgets.Log,
-  state: PackageState | undefined,
-): void {
-  if (!state) {
-    logView.setLabel(' Logs ');
-    logView.setContent('');
-    logView.setScroll(0);
-    return;
+      mouse: true,
+      scrollbar: {
+        ch: '│',
+      },
+      scrollback: MAX_LOG_LINES,
+      scrollOnInput: autoScroll,
+    });
   }
 
-  logView.setLabel(` Logs - ${state.package.name} `);
-  logView.setContent(state.logs.toArray().join('\n'));
-  logView.setScroll(0);
-}
+  updateState(state: PackageState | undefined): void {
+    if (!state) {
+      this.element.setLabel(' Logs ');
+      this.element.setContent('');
+      this.element.setScroll(0);
+      return;
+    }
 
-export function appendLog(
-  logView: blessed.Widgets.Log,
-  lines: string[],
-): void {
-  logView.add(lines.join("\n"));
-}
-
-export function toggleLogAutoScroll(
-  logView: blessed.Widgets.Log,
-  autoScroll: boolean,
-): void {
-  logView.scrollOnInput = autoScroll;
-
-  if (autoScroll) {
-    logView.setScrollPerc(100);
+    this.element.setLabel(` Logs - ${state.package.name} `);
+    this.element.setContent(state.logs.toArray().join('\n'));
+    this.element.setScroll(0);
   }
-}
 
-export function expandLogView(
-  logView: blessed.Widgets.Log,
-): void {
-  logView.left = 0;
-  logView.width = '100%';
-  logView.border = { type: 'line', top: true, left: false, right: false, bottom: false } as any;
-}
+  appendLines(lines: string[]): void {
+    this.element.add(lines.join("\n"));
+  }
 
-export function shrinkLogView(
-  logView: blessed.Widgets.Log,
-): void {
-  logView.left = '25%';
-  logView.width = '75%';
-  logView.border = { type: 'line', top: true, left: true, right: true, bottom: true } as any;
-}
+  setAutoScroll(enabled: boolean): void {
+    this.element.scrollOnInput = enabled;
 
-export function scrollLogLine(
-  logView: blessed.Widgets.Log,
-  direction: 1 | -1,
-): void {
-  logView.scroll(direction);
-}
+    if (enabled) {
+      this.element.setScrollPerc(100);
+    }
+  }
 
-export function scrollLogPage(
-  logView: blessed.Widgets.Log,
-  direction: 1 | -1,
-): void {
-  const pageSize = (logView.height as number) - 2;
-  logView.scroll(direction * pageSize);
+  expand(): void {
+    this.element.left = 0;
+    this.element.width = '100%';
+    this.element.border = { type: 'line', top: true, left: false, right: false, bottom: false } as any;
+  }
+
+  shrink(): void {
+    this.element.left = '25%';
+    this.element.width = '75%';
+    this.element.border = { type: 'line', top: true, left: true, right: true, bottom: true } as any;
+  }
+
+  scrollLine(direction: 1 | -1): void {
+    this.element.scroll(direction);
+  }
+
+  scrollPage(direction: 1 | -1): void {
+    const pageSize = (this.element.height as number) - 2;
+    this.element.scroll(direction * pageSize);
+  }
+
+  clearLogs(): void {
+    this.element.setContent('');
+  }
+
+  focus(): void {
+    this.element.focus();
+  }
 }
