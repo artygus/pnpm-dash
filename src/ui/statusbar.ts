@@ -26,7 +26,7 @@ export function updateStatusBar(
   statusBar.setContent(
     ` {bold}Q{/bold}:exit  {bold}tab{/bold}:toggle sidebar ` +
     ` {bold}q{/bold}:quit task  {bold}r{/bold}:restart task ` +
-    ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}c{/bold}:clear ` +
+    ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}u/d{/bold}:scroll  {bold}c{/bold}:clear ` +
     ` {bold}s{/bold}:autoscroll [${scrollStatus}] `
   );
 }
