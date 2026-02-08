@@ -14,7 +14,7 @@ export function parseCLI(): ParsedCLI {
     .description(
       'A TUI dashboard for pnpm workspaces - run scripts across packages with a split-pane interface'
     )
-    .version('0.1.3')
+    .version('0.1.4')
     .argument('<script>', 'Script name to run across workspace packages (e.g., dev, start)')
     .option(
       '-F, --filter <pattern...>',
