@@ -8,7 +8,9 @@ import {
   appendLog,
   toggleLogAutoScroll,
   expandLogView,
-  shrinkLogView
+  shrinkLogView,
+  scrollLogLine,
+  scrollLogPage,
 } from './logview.js';
 import { createStatusBar, updateStatusBar } from './statusbar.js';
 
@@ -86,6 +88,22 @@ export class Dashboard {
 
     this.screen.key(['tab'], () => {
       this.toggleSidebar();
+    });
+
+    this.screen.key(['u'], () => {
+      this.scrollLogUp();
+    });
+
+    this.screen.key(['d'], () => {
+      this.scrollLogDown();
+    });
+
+    this.screen.key(['S-u'], () => {
+      this.scrollLogPageUp();
+    });
+
+    this.screen.key(['S-d'], () => {
+      this.scrollLogPageDown();
     });
   }
 
@@ -201,6 +219,26 @@ export class Dashboard {
       this.sidebar.show();
       shrinkLogView(this.logView);
     }
+    this.needsRender = true;
+  }
+
+  private scrollLogUp(): void {
+    scrollLogLine(this.logView, -1);
+    this.needsRender = true;
+  }
+
+  private scrollLogDown(): void {
+    scrollLogLine(this.logView, 1);
+    this.needsRender = true;
+  }
+
+  private scrollLogPageUp(): void {
+    scrollLogPage(this.logView, -1);
+    this.needsRender = true;
+  }
+
+  private scrollLogPageDown(): void {
+    scrollLogPage(this.logView, 1);
     this.needsRender = true;
   }
 

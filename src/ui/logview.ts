@@ -84,3 +84,18 @@ export function shrinkLogView(
   logView.width = '75%';
   logView.border = { type: 'line', top: true, left: true, right: true, bottom: true } as any;
 }
+
+export function scrollLogLine(
+  logView: blessed.Widgets.Log,
+  direction: 1 | -1,
+): void {
+  logView.scroll(direction);
+}
+
+export function scrollLogPage(
+  logView: blessed.Widgets.Log,
+  direction: 1 | -1,
+): void {
+  const pageSize = (logView.height as number) - 2;
+  logView.scroll(direction * pageSize);
+}
