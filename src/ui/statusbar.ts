@@ -18,14 +18,11 @@ export class StatusBar {
     });
   }
 
-  update(autoScroll: boolean): void {
-    const scrollStatus = autoScroll ? 'ON' : 'OFF';
-
+  update(): void {
     this.element.setContent(
       ` {bold}Q{/bold}:exit  {bold}tab{/bold}:toggle sidebar ` +
       ` {bold}q{/bold}:quit task  {bold}r{/bold}:restart task ` +
-      ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}u/d{/bold}:scroll  {bold}c{/bold}:clear ` +
-      ` {bold}s{/bold}:autoscroll [${scrollStatus}] `
+      ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}u/d{/bold}:scroll  {bold}c{/bold}:clear `
     );
   }
 }

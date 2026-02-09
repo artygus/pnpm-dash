@@ -5,7 +5,7 @@ import { MAX_LOG_LINES } from '../constants.js';
 export class LogView {
   private element: blessed.Widgets.Log;
 
-  constructor(screen: blessed.Widgets.Screen, autoScroll: boolean) {
+  constructor(screen: blessed.Widgets.Screen) {
     this.element = blessed.log({
       parent: screen,
       label: ' Logs ',
@@ -29,7 +29,7 @@ export class LogView {
         ch: '│',
       },
       scrollback: MAX_LOG_LINES,
-      scrollOnInput: autoScroll,
+      scrollOnInput: true,
     });
   }
 
@@ -48,14 +48,6 @@ export class LogView {
 
   appendLines(lines: string[]): void {
     this.element.add(lines.join("\n"));
-  }
-
-  setAutoScroll(enabled: boolean): void {
-    this.element.scrollOnInput = enabled;
-
-    if (enabled) {
-      this.element.setScrollPerc(100);
-    }
   }
 
   expand(): void {

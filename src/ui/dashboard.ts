@@ -26,7 +26,6 @@ export class Dashboard {
     this.state = {
       packages: runner.getStates(),
       selectedIndex: 0,
-      autoScroll: true,
       sidebarHidden: false,
     };
 
@@ -37,7 +36,7 @@ export class Dashboard {
     });
 
     this.sidebar = new Sidebar(this.screen);
-    this.logView = new LogView(this.screen, this.state.autoScroll);
+    this.logView = new LogView(this.screen);
     this.statusBar = new StatusBar(this.screen);
 
     this.setupKeyBindings();
@@ -67,10 +66,6 @@ export class Dashboard {
 
     this.screen.key(['S-r'], () => {
       this.restartAll();
-    });
-
-    this.screen.key(['s'], () => {
-      this.toggleAutoScroll();
     });
 
     this.screen.key(['c'], () => {
@@ -194,13 +189,6 @@ export class Dashboard {
     this.runner.restartAll();
   }
 
-  private toggleAutoScroll(): void {
-    this.state.autoScroll = !this.state.autoScroll;
-    this.logView.setAutoScroll(this.state.autoScroll);
-    this.statusBar.update(this.state.autoScroll);
-    this.needsRender = true;
-  }
-
   private toggleSidebar(): void {
     this.state.sidebarHidden = !this.state.sidebarHidden;
     if (this.state.sidebarHidden) {
@@ -245,7 +233,7 @@ export class Dashboard {
   }
 
   private refreshStatusBar(): void {
-    this.statusBar.update(this.state.autoScroll);
+    this.statusBar.update();
   }
 
   async quit(): Promise<void> {
