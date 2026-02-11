@@ -1,28 +1,26 @@
-import blessed from 'reblessed';
+import termkit from 'terminal-kit';
 
 export class StatusBar {
-  private element: blessed.Widgets.BoxElement;
+  private terminal: termkit.Terminal;
 
-  constructor(screen: blessed.Widgets.Screen) {
-    this.element = blessed.box({
-      parent: screen,
-      bottom: 0,
-      left: 0,
-      width: '100%',
-      height: 1,
-      style: {
-        bg: 'blue',
-        fg: 'white',
-      },
-      tags: true,
-    });
+  constructor(terminal: termkit.Terminal) {
+    this.terminal = terminal;
   }
 
   update(): void {
-    this.element.setContent(
-      ` {bold}Q{/bold}:exit  {bold}tab{/bold}:toggle sidebar ` +
-      ` {bold}q{/bold}:quit task  {bold}r{/bold}:restart task ` +
-      ` {bold}R{/bold}:restart all  {bold}j/k{/bold}:navigate  {bold}u/d{/bold}:scroll  {bold}c{/bold}:clear `
-    );
+    const y = this.terminal.height;
+
+    this.terminal.moveTo(1, y);
+    this.terminal.bgBlue().white();
+
+    const text =
+      ' Q:exit  tab:toggle sidebar  q:quit task  r:restart task ' +
+      ' R:restart all  j/k:navigate  u/d:scroll  c:clear ';
+
+    // Pad to full width
+    const padding = ' '.repeat(Math.max(0, this.terminal.width - text.length));
+    this.terminal(text + padding);
+
+    this.terminal.styleReset();
   }
 }

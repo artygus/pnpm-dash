@@ -1,81 +1,153 @@
-import blessed from 'reblessed';
+import termkit from 'terminal-kit';
 import type { PackageState } from '../types.js';
-import { MAX_LOG_LINES } from '../constants.js';
 
 export class LogView {
-  private element: blessed.Widgets.Log;
+  private terminal: termkit.Terminal;
+  private currentState: PackageState | undefined;
+  private leftPos: number;
+  private width: number;
+  private height: number;
+  private screenBuffer: any = null;
+  private textBuffer: any = null;
 
-  constructor(screen: blessed.Widgets.Screen) {
-    this.element = blessed.log({
-      parent: screen,
-      label: ' Logs ',
-      left: '25%',
-      top: 0,
-      width: '75%',
-      height: '100%-1',
-      border: {
-        type: 'line',
-      },
-      style: {
-        border: {
-          fg: 'blue',
-        },
-        label: {
-          fg: 'blue',
-        },
-      },
-      mouse: true,
-      scrollbar: {
-        ch: '│',
-      },
-      scrollback: MAX_LOG_LINES,
-      scrollOnInput: true,
+  constructor(terminal: termkit.Terminal) {
+    this.terminal = terminal;
+    this.leftPos = Math.floor(terminal.width * 0.25) + 1;
+    this.width = terminal.width - this.leftPos + 1;
+    this.height = terminal.height - 1;
+    this.createBuffers();
+  }
+
+  private createBuffers(): void {
+    const contentWidth = this.width - 2;
+    const contentHeight = this.height - 2;
+
+    this.screenBuffer = new (termkit as any).ScreenBuffer({
+      dst: this.terminal,
+      width: contentWidth,
+      height: contentHeight,
+    });
+
+    this.textBuffer = new (termkit as any).TextBuffer({
+      dst: this.screenBuffer,
+      lineWrapWidth: contentWidth,
     });
   }
 
   updateState(state: PackageState | undefined): void {
-    if (!state) {
-      this.element.setLabel(' Logs ');
-      this.element.setContent('');
-      this.element.setScroll(0);
+    this.currentState = state;
+    this.renderContent();
+  }
+
+  appendLines(newLines: string[]): void {
+    if (!this.currentState) return;
+    this.renderContent();
+  }
+
+  private renderContent(): void {
+    const contentHeight = this.height - 2;
+
+    this.drawBorders();
+
+    // Clear screen buffer
+    this.screenBuffer.fill({ char: ' ', attr: {} });
+
+    if (!this.currentState) {
+      this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
       return;
     }
 
-    this.element.setLabel(` Logs - ${state.package.name} `);
-    this.element.setContent(state.logs.toArray().join('\n'));
-    this.element.setScroll(0);
+    const lines = this.currentState.logs.toArray();
+
+    if (lines.length === 0) {
+      this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
+      return;
+    }
+
+    this.textBuffer.setText(lines.join('\n'), 'ansi');
+
+    const totalLines = this.textBuffer.buffer.length;
+
+    if (totalLines > contentHeight) {
+      const offsetY = -(totalLines - contentHeight);
+      this.textBuffer.draw({ y: offsetY });
+    } else {
+      this.textBuffer.draw();
+    }
+
+    this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
   }
 
-  appendLines(lines: string[]): void {
-    this.element.add(lines.join("\n"));
+  private drawBorders(): void {
+    const boxWidth = this.width;
+
+    this.terminal.styleReset();
+    this.terminal.blue();
+
+    // Top border
+    this.terminal.moveTo(this.leftPos, 1);
+    const label = this.currentState
+      ? ` Logs - ${this.currentState.package.name} `
+      : ' Logs ';
+    this.terminal('┌─' + label + ' ');
+    this.terminal('─'.repeat(Math.max(0, boxWidth - label.length - 4)));
+    this.terminal('┐');
+
+    // Side borders
+    for (let i = 2; i < this.height; i++) {
+      this.terminal.moveTo(this.leftPos, i);
+      this.terminal('│');
+      this.terminal.moveTo(this.leftPos + boxWidth - 1, i);
+      this.terminal('│');
+    }
+
+    // Bottom border
+    this.terminal.moveTo(this.leftPos, this.height);
+    this.terminal('└');
+    this.terminal('─'.repeat(boxWidth - 2));
+    this.terminal('┘');
+
+    this.terminal.styleReset();
   }
 
   expand(): void {
-    this.element.left = 0;
-    this.element.width = '100%';
-    this.element.border = { type: 'line', top: true, left: false, right: false, bottom: false } as any;
+    this.clearCurrentArea();
+
+    this.leftPos = 1;
+    this.width = this.terminal.width;
+    this.createBuffers();
+    this.renderContent();
   }
 
   shrink(): void {
-    this.element.left = '25%';
-    this.element.width = '75%';
-    this.element.border = { type: 'line', top: true, left: true, right: true, bottom: true } as any;
+    this.clearCurrentArea();
+
+    this.leftPos = Math.floor(this.terminal.width * 0.25) + 1;
+    this.width = this.terminal.width - this.leftPos + 1;
+    this.createBuffers();
+    this.renderContent();
+  }
+
+  private clearCurrentArea(): void {
+    this.terminal.styleReset();
+    for (let i = 1; i <= this.height; i++) {
+      this.terminal.moveTo(this.leftPos, i);
+      this.terminal(' '.repeat(this.width));
+    }
   }
 
   scrollLine(direction: 1 | -1): void {
-    this.element.scroll(direction);
+    // TODO
   }
 
   scrollPage(direction: 1 | -1): void {
-    const pageSize = (this.element.height as number) - 2;
-    this.element.scroll(direction * pageSize);
+    // TODO
   }
 
   clearLogs(): void {
-    this.element.setContent('');
-  }
-
-  focus(): void {
-    this.element.focus();
+    if (this.currentState) {
+      this.currentState.logs.clear();
+    }
+    this.renderContent();
   }
 }
