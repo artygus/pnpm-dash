@@ -9,6 +9,8 @@ export class LogView {
   private height: number;
   private screenBuffer: any = null;
   private textBuffer: any = null;
+  private scrollOffset: number = 0; // 0 = bottom (live mode), positive = scrolled up
+  private lastLineCount: number = 0; // Track line count to detect new lines
 
   constructor(terminal: termkit.Terminal) {
     this.terminal = terminal;
@@ -36,6 +38,8 @@ export class LogView {
 
   updateState(state: PackageState | undefined): void {
     this.currentState = state;
+    this.scrollOffset = 0;
+    this.lastLineCount = 0;
     this.renderContent();
   }
 
@@ -68,14 +72,36 @@ export class LogView {
 
     const totalLines = this.textBuffer.buffer.length;
 
-    if (totalLines > contentHeight) {
-      const offsetY = -(totalLines - contentHeight);
-      this.textBuffer.draw({ y: offsetY });
-    } else {
-      this.textBuffer.draw();
+    // If scrolled up, adjust offset to compensate for new lines
+    if (this.scrollOffset > 0 && this.lastLineCount > 0) {
+      const newLinesAdded = totalLines - this.lastLineCount;
+      if (newLinesAdded > 0) {
+        this.scrollOffset += newLinesAdded;
+      }
     }
 
+    const maxScroll = Math.max(0, totalLines - contentHeight);
+
+    // Clamp scrollOffset
+    this.scrollOffset = Math.min(this.scrollOffset, maxScroll);
+
+    let offsetY = 0;
+    if (this.scrollOffset === 0) {
+      // At bottom - show most recent
+      if (totalLines > contentHeight) {
+        offsetY = -(totalLines - contentHeight);
+      }
+    } else {
+      // Scrolled up
+      offsetY = -(totalLines - contentHeight - this.scrollOffset);
+    }
+
+    this.textBuffer.draw({ y: offsetY });
+
     this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
+
+    // Update last line count (wrapped) for next append
+    this.lastLineCount = totalLines;
   }
 
   private drawBorders(): void {
@@ -115,6 +141,7 @@ export class LogView {
 
     this.leftPos = 1;
     this.width = this.terminal.width;
+    this.scrollOffset = 0;
     this.createBuffers();
     this.renderContent();
   }
@@ -124,6 +151,7 @@ export class LogView {
 
     this.leftPos = Math.floor(this.terminal.width * 0.25) + 1;
     this.width = this.terminal.width - this.leftPos + 1;
+    this.scrollOffset = 0;
     this.createBuffers();
     this.renderContent();
   }
@@ -137,17 +165,31 @@ export class LogView {
   }
 
   scrollLine(direction: 1 | -1): void {
-    // TODO
+    if (direction === -1) {
+      // Scroll up
+      this.scrollOffset++;
+    } else {
+      // Scroll down
+      this.scrollOffset = Math.max(0, this.scrollOffset - 1);
+    }
+    this.renderContent();
   }
 
   scrollPage(direction: 1 | -1): void {
-    // TODO
+    const pageSize = this.height - 2;
+
+    if (direction === -1) {
+      // Page up
+      this.scrollOffset += pageSize;
+    } else {
+      // Page down
+      this.scrollOffset = Math.max(0, this.scrollOffset - pageSize);
+    }
+    this.renderContent();
   }
 
   clearLogs(): void {
-    if (this.currentState) {
-      this.currentState.logs.clear();
-    }
+    this.scrollOffset = 0;
     this.renderContent();
   }
 }
