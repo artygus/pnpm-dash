@@ -125,7 +125,7 @@ export class Dashboard {
     this.runner.on('log', (packageName, line) => {
       if (packageName === this.getSelectedPackageName()) {
         this.pendingLogs.push(line);
-        }
+      }
     });
 
     this.runner.on('exit', (packageName, code) => {
