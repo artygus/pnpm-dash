@@ -48,12 +48,10 @@ export class Dashboard {
     this.terminal.on('key', (name: string) => {
       switch (name) {
         case 'CTRL_C':
-        case 'q':
-          if (name === 'CTRL_C') {
             this.quit();
-          } else {
-            this.stopSelected();
-          }
+            break;
+        case 'q':
+          this.stopSelected();
           break;
         case 'Q':
           this.quit();
@@ -96,21 +94,17 @@ export class Dashboard {
 
   private setupResizeHandler(): void {
     this.terminal.on('resize', () => {
-      // Clear screen
       this.terminal.clear();
 
-      // Recreate UI components with new dimensions
       this.sidebar = new Sidebar(this.terminal);
       this.logView = new LogView(this.terminal);
       this.statusBar = new StatusBar(this.terminal);
 
-      // Update layout based on sidebar state
       if (this.state.sidebarHidden) {
         this.sidebar.hide();
         this.logView.expand();
       }
 
-      // Re-render everything
       this.refreshSidebar();
       this.refreshLogView();
       this.refreshStatusBar();
