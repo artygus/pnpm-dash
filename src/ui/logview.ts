@@ -7,10 +7,10 @@ export class LogView {
   private leftPos: number;
   private width: number;
   private height: number;
-  private screenBuffer: any = null;
-  private textBuffer: any = null;
-  private scrollOffset: number = 0; // 0 = bottom (live mode), positive = scrolled up
-  private lastLineCount: number = 0; // Track line count to detect new lines
+  private screenBuffer: termkit.ScreenBuffer | null = null;
+  private textBuffer: termkit.TextBuffer | null = null;
+  private scrollOffset: number = 0;
+  private lastLineCount: number = 0;
 
   constructor(terminal: termkit.Terminal) {
     this.terminal = terminal;
@@ -24,13 +24,13 @@ export class LogView {
     const contentWidth = this.width - 2;
     const contentHeight = this.height - 2;
 
-    this.screenBuffer = new (termkit as any).ScreenBuffer({
+    this.screenBuffer = new termkit.ScreenBuffer({
       dst: this.terminal,
       width: contentWidth,
       height: contentHeight,
     });
 
-    this.textBuffer = new (termkit as any).TextBuffer({
+    this.textBuffer = new termkit.TextBuffer({
       dst: this.screenBuffer,
       lineWrapWidth: contentWidth,
     });
@@ -49,12 +49,12 @@ export class LogView {
   }
 
   private renderContent(): void {
+    if (!this.screenBuffer || !this.textBuffer) return;
+
     const contentHeight = this.height - 2;
 
     this.drawBorders();
-
-    // Clear screen buffer
-    this.screenBuffer.fill({ char: ' ', attr: {} });
+    this.screenBuffer.clear();
 
     if (!this.currentState) {
       this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
