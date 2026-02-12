@@ -251,12 +251,8 @@ export class Dashboard {
 
     await this.runner.stopAll();
 
-    this.terminal.grabInput(false);
-    this.terminal.alternateScreenBuffer(false);
     this.terminal.fullscreen(false);
-    this.terminal.hideCursor(false);
-    this.terminal('\n');
-    process.exit(0);
+    this.terminal.processExit(0);
   }
 
   start(): void {

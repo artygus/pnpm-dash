@@ -22,6 +22,7 @@ declare module 'terminal-kit' {
   export namespace Terminal {
     interface Impl {
       alternateScreenBuffer(enable: boolean): void;
+      processExit(code: number): void;
     }
   }
 }
