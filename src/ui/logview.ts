@@ -40,15 +40,15 @@ export class LogView {
     this.currentState = state;
     this.scrollOffset = 0;
     this.lastLineCount = 0;
-    this.renderContent();
+    this.render();
   }
 
   appendLines(newLines: string[]): void {
     if (!this.currentState) return;
-    this.renderContent();
+    this.render();
   }
 
-  private renderContent(): void {
+  private render(): void {
     if (!this.screenBuffer || !this.textBuffer) return;
 
     const contentHeight = this.height - 2;
@@ -143,7 +143,7 @@ export class LogView {
     this.width = this.terminal.width;
     this.scrollOffset = 0;
     this.createBuffers();
-    this.renderContent();
+    this.render();
   }
 
   shrink(): void {
@@ -153,7 +153,7 @@ export class LogView {
     this.width = this.terminal.width - this.leftPos + 1;
     this.scrollOffset = 0;
     this.createBuffers();
-    this.renderContent();
+    this.render();
   }
 
   private clearCurrentArea(): void {
@@ -170,7 +170,7 @@ export class LogView {
     } else {
       this.scrollOffset = Math.max(0, this.scrollOffset - 1);
     }
-    this.renderContent();
+    this.render();
   }
 
   scrollPage(direction: 1 | -1): void {
@@ -181,11 +181,11 @@ export class LogView {
     } else {
       this.scrollOffset = Math.max(0, this.scrollOffset - pageSize);
     }
-    this.renderContent();
+    this.render();
   }
 
   clearLogs(): void {
     this.scrollOffset = 0;
-    this.renderContent();
+    this.render();
   }
 }
