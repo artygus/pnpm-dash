@@ -51,8 +51,6 @@ export class LogView {
   private render(): void {
     if (!this.screenBuffer || !this.textBuffer) return;
 
-    const contentHeight = this.height - 2;
-
     this.drawBorders();
     this.screenBuffer.clear();
 
@@ -61,15 +59,14 @@ export class LogView {
       return;
     }
 
-    const lines = this.currentState.logs.toArray();
-
+    const contentHeight = this.height - 2;
+    const lines = this.currentState.logs.takeLast(contentHeight);
     if (lines.length === 0) {
       this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
       return;
     }
 
     this.textBuffer.setText(lines.join('\n'), 'ansi');
-
     const totalLines = this.textBuffer.buffer.length;
 
     // If scrolled up, adjust offset to compensate for new lines
@@ -81,8 +78,6 @@ export class LogView {
     }
 
     const maxScroll = Math.max(0, totalLines - contentHeight);
-
-    // Clamp scrollOffset
     this.scrollOffset = Math.min(this.scrollOffset, maxScroll);
 
     let offsetY = 0;
@@ -97,10 +92,7 @@ export class LogView {
     }
 
     this.textBuffer.draw({ y: offsetY });
-
     this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
-
-    // Update last line count (wrapped) for next append
     this.lastLineCount = totalLines;
   }
 
