@@ -33,11 +33,11 @@
     "@pnpm/find-workspace-dir": "^7.0.2",
     "@pnpm/workspace.find-packages": "^4.0.5",
     "commander": "^13.1.0",
-    "reblessed": "^0.2.1"
+    "terminal-kit": "^3.1.2"
   },
   "devDependencies": {
-    "@types/blessed": "^0.1.25",
     "@types/node": "^22.0.0",
+    "@types/terminal-kit": "^2.5.7",
     "typescript": "^5.7.0"
   },
   "engines": {

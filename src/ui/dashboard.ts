@@ -1,4 +1,4 @@
-import blessed from 'reblessed';
+import termkit from 'terminal-kit';
 import { Runner } from '../runner.js';
 import type { WorkspacePackage, DashboardState } from '../types.js';
 import { Sidebar } from './sidebar.js';
@@ -8,7 +8,7 @@ import { StatusBar } from './statusbar.js';
 const RENDER_INTERVAL = 33;
 
 export class Dashboard {
-  private screen: blessed.Widgets.Screen;
+  private terminal: termkit.Terminal;
   private sidebar: Sidebar;
   private logView: LogView;
   private statusBar: StatusBar;
@@ -16,12 +16,12 @@ export class Dashboard {
   private state: DashboardState;
   private packageNames: string[] = [];
   private renderTimer: ReturnType<typeof setInterval> | null = null;
-  private needsRender: boolean = false;
   private pendingLogs: string[] = [];
 
   constructor(runner: Runner, packages: WorkspacePackage[]) {
     this.runner = runner;
     this.packageNames = packages.map((p) => p.name);
+    this.terminal = termkit.terminal;
 
     this.state = {
       packages: runner.getStates(),
@@ -29,91 +29,105 @@ export class Dashboard {
       sidebarHidden: false,
     };
 
-    this.screen = blessed.screen({
-      smartCSR: true,
-      title: 'pnpm-dash',
-      fullUnicode: true,
-    });
+    this.terminal.fullscreen(true);
+    this.terminal.alternateScreenBuffer(true);
+    this.terminal.hideCursor();
 
-    this.sidebar = new Sidebar(this.screen);
-    this.logView = new LogView(this.screen);
-    this.statusBar = new StatusBar(this.screen);
+    this.sidebar = new Sidebar(this.terminal);
+    this.logView = new LogView(this.terminal);
+    this.statusBar = new StatusBar(this.terminal);
 
     this.setupKeyBindings();
     this.setupRunnerEvents();
+    this.setupResizeHandler();
   }
 
   private setupKeyBindings(): void {
-    this.screen.key(['S-q', 'C-c'], () => {
-      this.quit();
-    });
+    this.terminal.grabInput({ mouse: 'motion' });
 
-    this.screen.key(['q'], () => {
-      this.stopSelected();
+    this.terminal.on('key', (name: string) => {
+      switch (name) {
+        case 'CTRL_C':
+            this.quit();
+            break;
+        case 'q':
+          this.stopSelected();
+          break;
+        case 'Q':
+          this.quit();
+          break;
+        case 'j':
+        case 'DOWN':
+          this.selectNext();
+          break;
+        case 'k':
+        case 'UP':
+          this.selectPrev();
+          break;
+        case 'r':
+          this.restartSelected();
+          break;
+        case 'R':
+          this.restartAll();
+          break;
+        case 'c':
+          this.clearSelected();
+          break;
+        case 'TAB':
+          this.toggleSidebar();
+          break;
+        case 'u':
+          this.scrollLogUp();
+          break;
+        case 'd':
+          this.scrollLogDown();
+          break;
+        case 'U':
+          this.scrollLogPageUp();
+          break;
+        case 'D':
+          this.scrollLogPageDown();
+          break;
+      }
     });
+  }
 
-    this.screen.key(['j', 'down'], () => {
-      this.selectNext();
-    });
+  private setupResizeHandler(): void {
+    this.terminal.on('resize', () => {
+      this.terminal.clear();
 
-    this.screen.key(['k', 'up'], () => {
-      this.selectPrev();
-    });
+      this.sidebar = new Sidebar(this.terminal);
+      this.logView = new LogView(this.terminal);
+      this.statusBar = new StatusBar(this.terminal);
 
-    this.screen.key(['r'], () => {
-      this.restartSelected();
-    });
+      if (this.state.sidebarHidden) {
+        this.sidebar.hide();
+        this.logView.expand();
+      }
 
-    this.screen.key(['S-r'], () => {
-      this.restartAll();
-    });
-
-    this.screen.key(['c'], () => {
-      this.clearSelected();
-    });
-
-    this.screen.key(['tab'], () => {
-      this.toggleSidebar();
-    });
-
-    this.screen.key(['u'], () => {
-      this.scrollLogUp();
-    });
-
-    this.screen.key(['d'], () => {
-      this.scrollLogDown();
-    });
-
-    this.screen.key(['S-u'], () => {
-      this.scrollLogPageUp();
-    });
-
-    this.screen.key(['S-d'], () => {
-      this.scrollLogPageDown();
+      this.refreshSidebar();
+      this.refreshLogView();
+      this.refreshStatusBar();
     });
   }
 
   private setupRunnerEvents(): void {
     this.runner.on('start', (packageName) => {
       this.refreshSidebar();
-      this.needsRender = true;
     });
 
     this.runner.on('log', (packageName, line) => {
       if (packageName === this.getSelectedPackageName()) {
         this.pendingLogs.push(line);
-        this.needsRender = true;
       }
     });
 
     this.runner.on('exit', (packageName, code) => {
       this.refreshSidebar();
-      this.needsRender = true;
     });
 
     this.runner.on('error', (packageName, error) => {
       this.refreshSidebar();
-      this.needsRender = true;
     });
   }
 
@@ -121,11 +135,6 @@ export class Dashboard {
     if (this.pendingLogs.length > 0) {
       this.logView.appendLines(this.pendingLogs);
       this.pendingLogs = [];
-    }
-
-    if (this.needsRender) {
-      this.screen.render();
-      this.needsRender = false;
     }
   }
 
@@ -147,7 +156,6 @@ export class Dashboard {
     this.refreshSidebar();
     this.refreshLogView();
     this.pendingLogs = [];
-    this.needsRender = true;
   }
 
   private selectPrev(): void {
@@ -159,7 +167,6 @@ export class Dashboard {
     this.refreshSidebar();
     this.refreshLogView();
     this.pendingLogs = [];
-    this.needsRender = true;
   }
 
   private clearSelected(): void {
@@ -167,7 +174,6 @@ export class Dashboard {
     if (state) {
       state.logs.clear();
       this.logView.clearLogs();
-      this.needsRender = true;
     }
   }
 
@@ -195,30 +201,25 @@ export class Dashboard {
       this.sidebar.hide();
       this.logView.expand();
     } else {
-      this.sidebar.show();
       this.logView.shrink();
+      this.sidebar.show();
     }
-    this.needsRender = true;
   }
 
   private scrollLogUp(): void {
     this.logView.scrollLine(-1);
-    this.needsRender = true;
   }
 
   private scrollLogDown(): void {
     this.logView.scrollLine(1);
-    this.needsRender = true;
   }
 
   private scrollLogPageUp(): void {
     this.logView.scrollPage(-1);
-    this.needsRender = true;
   }
 
   private scrollLogPageDown(): void {
     this.logView.scrollPage(1);
-    this.needsRender = true;
   }
 
   private refreshSidebar(): void {
@@ -244,17 +245,14 @@ export class Dashboard {
 
     await this.runner.stopAll();
 
-    this.screen.destroy();
-    process.exit(0);
+    this.terminal.fullscreen(false);
+    this.terminal.processExit(0);
   }
 
   start(): void {
     this.refreshSidebar();
     this.refreshLogView();
     this.refreshStatusBar();
-
-    this.logView.focus();
-    this.screen.render();
 
     this.renderTimer = setInterval(() => this.flushRender(), RENDER_INTERVAL);
   }
