@@ -166,10 +166,8 @@ export class LogView {
 
   scrollLine(direction: 1 | -1): void {
     if (direction === -1) {
-      // Scroll up
       this.scrollOffset++;
     } else {
-      // Scroll down
       this.scrollOffset = Math.max(0, this.scrollOffset - 1);
     }
     this.renderContent();
@@ -179,10 +177,8 @@ export class LogView {
     const pageSize = this.height - 2;
 
     if (direction === -1) {
-      // Page up
       this.scrollOffset += pageSize;
     } else {
-      // Page down
       this.scrollOffset = Math.max(0, this.scrollOffset - pageSize);
     }
     this.renderContent();
