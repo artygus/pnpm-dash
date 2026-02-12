@@ -5,7 +5,6 @@ import { Sidebar } from './sidebar.js';
 import { LogView } from './logview.js';
 import { StatusBar } from './statusbar.js';
 
-const terminal = termkit.terminal;
 const RENDER_INTERVAL = 33;
 
 export class Dashboard {
@@ -22,7 +21,7 @@ export class Dashboard {
   constructor(runner: Runner, packages: WorkspacePackage[]) {
     this.runner = runner;
     this.packageNames = packages.map((p) => p.name);
-    this.terminal = terminal;
+    this.terminal = termkit.terminal;
 
     this.state = {
       packages: runner.getStates(),
