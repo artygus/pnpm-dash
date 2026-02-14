@@ -7,8 +7,8 @@ export class LogView {
   private leftPos: number;
   private width: number;
   private height: number;
-  private screenBuffer: termkit.ScreenBuffer | null = null;
-  private textBuffer: termkit.TextBuffer | null = null;
+  private screenBuffer!: termkit.ScreenBuffer;
+  private textBuffer!: termkit.TextBuffer;
   private scrollOffset: number = 0;
   private lastLineCount: number = 0;
 
@@ -49,8 +49,6 @@ export class LogView {
   }
 
   private render(): void {
-    if (!this.screenBuffer || !this.textBuffer) return;
-
     this.drawBorders();
     this.screenBuffer.clear();
 
