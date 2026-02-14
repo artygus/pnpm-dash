@@ -61,6 +61,7 @@ export class LogView {
 
     const contentHeight = this.height - 2;
     const lines = this.currentState.logs.takeLast(contentHeight);
+
     if (lines.length === 0) {
       this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
       return;
@@ -78,16 +79,14 @@ export class LogView {
     }
 
     const maxScroll = Math.max(0, totalLines - contentHeight);
-    this.scrollOffset = Math.min(this.scrollOffset, maxScroll);
+    this.scrollOffset = Math.min(Math.max(this.scrollOffset, 0), maxScroll);
 
     let offsetY = 0;
     if (this.scrollOffset === 0) {
-      // At bottom - show most recent
       if (totalLines > contentHeight) {
         offsetY = -(totalLines - contentHeight);
       }
     } else {
-      // Scrolled up
       offsetY = -(totalLines - contentHeight - this.scrollOffset);
     }
 
@@ -160,7 +159,7 @@ export class LogView {
     if (direction === -1) {
       this.scrollOffset++;
     } else {
-      this.scrollOffset = Math.max(0, this.scrollOffset - 1);
+      this.scrollOffset--;
     }
     this.render();
   }
@@ -171,7 +170,7 @@ export class LogView {
     if (direction === -1) {
       this.scrollOffset += pageSize;
     } else {
-      this.scrollOffset = Math.max(0, this.scrollOffset - pageSize);
+      this.scrollOffset -= pageSize;
     }
     this.render();
   }
