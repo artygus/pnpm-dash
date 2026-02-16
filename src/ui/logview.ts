@@ -53,7 +53,7 @@ export class LogView {
     this.screenBuffer.clear();
 
     if (!this.currentState) {
-      this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
+      this.screenBuffer.draw({ x: this.leftPos + 1, y: 2 });
       return;
     }
 
@@ -61,7 +61,7 @@ export class LogView {
     const lines = this.currentState.logs.takeLast(contentHeight);
 
     if (lines.length === 0) {
-      this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
+      this.screenBuffer.draw({ x: this.leftPos + 1, y: 2 });
       return;
     }
 
@@ -89,7 +89,7 @@ export class LogView {
     }
 
     this.textBuffer.draw({ y: offsetY });
-    this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
+    this.screenBuffer.draw({ x: this.leftPos + 1, y: 2 });
     this.lastLineCount = totalLines;
   }
 
