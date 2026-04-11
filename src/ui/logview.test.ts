@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, beforeEach } from 'node:test';
+import assert from 'node:assert/strict';
+import { Writable } from 'node:stream';
 import termkit from 'terminal-kit';
 import { LogView } from './logview.js';
 import { RingBuffer } from '../ringbuf.js';
@@ -8,15 +10,13 @@ const TERM_WIDTH = 80;
 const TERM_HEIGHT = 24;
 const CONTENT_HEIGHT = TERM_HEIGHT - 1 - 2; // height - statusbar - borders
 
-function createMockTerminal(): termkit.Terminal {
-  const callable = Object.assign((..._args: unknown[]) => {}, {
-    width: TERM_WIDTH,
-    height: TERM_HEIGHT,
-    moveTo: vi.fn().mockReturnThis(),
-    styleReset: vi.fn().mockReturnThis(),
-    blue: vi.fn().mockReturnThis(),
-  });
-  return callable as unknown as termkit.Terminal;
+const nullStream = new Writable({ write(chunk, enc, cb) { cb(); } });
+
+function createTerminal(): termkit.Terminal {
+  const t = termkit.createTerminal({ stdout: nullStream, isTTY: false });
+  t.width = TERM_WIDTH;
+  t.height = TERM_HEIGHT;
+  return t;
 }
 
 function createState(lines: string[]): PackageState {
@@ -51,20 +51,20 @@ describe('LogView', () => {
   let logView: TestableLogView;
 
   beforeEach(() => {
-    terminal = createMockTerminal();
+    terminal = createTerminal();
     logView = new TestableLogView(terminal);
   });
 
   describe('basic rendering', () => {
     it('renders empty state', () => {
       logView.updateState(undefined);
-      expect(logView.getTextContent()).toBe('');
+      assert.equal(logView.getTextContent(), '');
     });
 
     it('renders a few log lines', () => {
       const state = createState(['line 1', 'line 2', 'line 3']);
       logView.updateState(state);
-      expect(logView.getTextContent()).toBe('line 1\nline 2\nline 3');
+      assert.equal(logView.getTextContent(), 'line 1\nline 2\nline 3');
     });
 
     it('renders only last contentHeight lines when logs exceed viewport', () => {
@@ -74,9 +74,9 @@ describe('LogView', () => {
 
       const text = logView.getTextContent();
       const rendered = text.split('\n');
-      expect(rendered.length).toBe(CONTENT_HEIGHT);
-      expect(rendered[rendered.length - 1]).toBe('line 49');
-      expect(rendered[0]).toBe(`line ${50 - CONTENT_HEIGHT}`);
+      assert.equal(rendered.length, CONTENT_HEIGHT);
+      assert.equal(rendered[rendered.length - 1], 'line 49');
+      assert.equal(rendered[0], `line ${50 - CONTENT_HEIGHT}`);
     });
 
     it('appends new lines and re-renders', () => {
@@ -86,7 +86,7 @@ describe('LogView', () => {
       state.logs.push('line 2');
       logView.appendLines(['line 2']);
 
-      expect(logView.getTextContent()).toBe('line 1\nline 2');
+      assert.equal(logView.getTextContent(), 'line 1\nline 2');
     });
 
     it('shows latest lines after many appends', () => {
@@ -100,8 +100,8 @@ describe('LogView', () => {
 
       const text = logView.getTextContent();
       const rendered = text.split('\n');
-      expect(rendered.length).toBe(CONTENT_HEIGHT);
-      expect(rendered[rendered.length - 1]).toBe('line 49');
+      assert.equal(rendered.length, CONTENT_HEIGHT);
+      assert.equal(rendered[rendered.length - 1], 'line 49');
     });
   });
 
@@ -112,8 +112,8 @@ describe('LogView', () => {
 
       const state2 = createState(['pkg2 line 0']);
       logView.updateState(state2);
-      expect(logView.getScrollOffset()).toBe(0);
-      expect(logView.getTextContent()).toBe('pkg2 line 0');
+      assert.equal(logView.getScrollOffset(), 0);
+      assert.equal(logView.getTextContent(), 'pkg2 line 0');
     });
 
     it('sets state to undefined', () => {
@@ -121,8 +121,8 @@ describe('LogView', () => {
       logView.updateState(state);
 
       logView.updateState(undefined);
-      expect(logView.getState()).toBeUndefined();
-      expect(logView.getScrollOffset()).toBe(0);
+      assert.equal(logView.getState(), undefined);
+      assert.equal(logView.getScrollOffset(), 0);
     });
   });
 
@@ -133,7 +133,7 @@ describe('LogView', () => {
       logView.updateState(state);
 
       logView.clearLogs();
-      expect(logView.getScrollOffset()).toBe(0);
+      assert.equal(logView.getScrollOffset(), 0);
     });
   });
 });
