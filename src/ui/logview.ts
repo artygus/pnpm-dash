@@ -58,8 +58,7 @@ export class LogView {
     }
 
     const contentHeight = this.height - 2;
-    const lines = this.currentState.logs.takeLast(contentHeight);
-
+    const lines = this.currentState.logs.toArray();
     if (lines.length === 0) {
       this.screenBuffer.draw({ x: this.leftPos + 1, y: 2 });
       return;

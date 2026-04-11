@@ -39,25 +39,6 @@ export class RingBuffer<T> {
     return result;
   }
 
-  takeLast(count: number): T[] {
-    const n = Math.min(count, this.size);
-    if (n === 0) return [];
-
-    const startOffset = this.size - n;
-    const startIndex = (this.head + startOffset) % this.cap;
-    const endIndex = (this.head + this.size) % this.cap;
-
-    if (startIndex < endIndex) {
-      return this.buffer.slice(startIndex, endIndex) as T[];
-    }
-
-    const result = new Array<T>(n);
-    for (let i = 0; i < n; i++) {
-      result[i] = this.buffer[(startIndex + i) % this.cap] as T;
-    }
-    return result;
-  }
-
   get length(): number {
     return this.size;
   }

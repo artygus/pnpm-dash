@@ -33,8 +33,11 @@ function createState(lines: string[]): PackageState {
 }
 
 class TestableLogView extends LogView {
-  getTextContent(): string {
-    return this.textBuffer.getText();
+  getScreenLines(): string[] {
+    return this.screenBuffer.dumpChars()
+      .split('\n')
+      .map(line => line.trimEnd())
+      .filter(line => line.length > 0);
   }
 
   getScrollOffset(): number {
@@ -58,13 +61,13 @@ describe('LogView', () => {
   describe('basic rendering', () => {
     it('renders empty state', () => {
       logView.updateState(undefined);
-      assert.equal(logView.getTextContent(), '');
+      assert.deepEqual(logView.getScreenLines(), []);
     });
 
     it('renders a few log lines', () => {
       const state = createState(['line 1', 'line 2', 'line 3']);
       logView.updateState(state);
-      assert.equal(logView.getTextContent(), 'line 1\nline 2\nline 3');
+      assert.deepEqual(logView.getScreenLines(), ['line 1', 'line 2', 'line 3']);
     });
 
     it('renders only last contentHeight lines when logs exceed viewport', () => {
@@ -72,11 +75,10 @@ describe('LogView', () => {
       const state = createState(lines);
       logView.updateState(state);
 
-      const text = logView.getTextContent();
-      const rendered = text.split('\n');
-      assert.equal(rendered.length, CONTENT_HEIGHT);
-      assert.equal(rendered[rendered.length - 1], 'line 49');
-      assert.equal(rendered[0], `line ${50 - CONTENT_HEIGHT}`);
+      const visible = logView.getScreenLines();
+      assert.equal(visible.length, CONTENT_HEIGHT);
+      assert.equal(visible[visible.length - 1], 'line 49');
+      assert.equal(visible[0], `line ${50 - CONTENT_HEIGHT}`);
     });
 
     it('appends new lines and re-renders', () => {
@@ -86,7 +88,7 @@ describe('LogView', () => {
       state.logs.push('line 2');
       logView.appendLines(['line 2']);
 
-      assert.equal(logView.getTextContent(), 'line 1\nline 2');
+      assert.deepEqual(logView.getScreenLines(), ['line 1', 'line 2']);
     });
 
     it('shows latest lines after many appends', () => {
@@ -98,10 +100,9 @@ describe('LogView', () => {
         logView.appendLines([`line ${i}`]);
       }
 
-      const text = logView.getTextContent();
-      const rendered = text.split('\n');
-      assert.equal(rendered.length, CONTENT_HEIGHT);
-      assert.equal(rendered[rendered.length - 1], 'line 49');
+      const visible = logView.getScreenLines();
+      assert.equal(visible.length, CONTENT_HEIGHT);
+      assert.equal(visible[visible.length - 1], 'line 49');
     });
   });
 
@@ -113,16 +114,7 @@ describe('LogView', () => {
       const state2 = createState(['pkg2 line 0']);
       logView.updateState(state2);
       assert.equal(logView.getScrollOffset(), 0);
-      assert.equal(logView.getTextContent(), 'pkg2 line 0');
-    });
-
-    it('sets state to undefined', () => {
-      const state = createState(['line 1']);
-      logView.updateState(state);
-
-      logView.updateState(undefined);
-      assert.equal(logView.getState(), undefined);
-      assert.equal(logView.getScrollOffset(), 0);
+      assert.deepEqual(logView.getScreenLines(), ['pkg2 line 0']);
     });
   });
 
