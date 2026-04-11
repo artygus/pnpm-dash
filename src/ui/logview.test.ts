@@ -25,7 +25,7 @@ function createState(lines: string[]): PackageState {
     logs.push(line);
   }
   return {
-    package: { name: 'test-pkg', version: '1.0.0', path: '/test', scripts: {} },
+    package: { name: 'test-pkg', path: '/test', scripts: {} },
     status: 'running',
     subprocess: null,
     logs,
