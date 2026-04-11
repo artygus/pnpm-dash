@@ -13,7 +13,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "pnpm",
@@ -38,9 +40,10 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/terminal-kit": "^2.5.7",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.4"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }

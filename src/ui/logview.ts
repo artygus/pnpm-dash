@@ -2,15 +2,15 @@ import termkit from 'terminal-kit';
 import type { PackageState } from '../types.js';
 
 export class LogView {
-  private terminal: termkit.Terminal;
-  private currentState: PackageState | undefined;
-  private leftPos: number;
-  private width: number;
-  private height: number;
-  private screenBuffer!: termkit.ScreenBuffer;
-  private textBuffer!: termkit.TextBuffer;
-  private scrollOffset: number = 0;
-  private lastLineCount: number = 0;
+  protected terminal: termkit.Terminal;
+  protected currentState: PackageState | undefined;
+  protected leftPos: number;
+  protected width: number;
+  protected height: number;
+  protected screenBuffer!: termkit.ScreenBuffer;
+  protected textBuffer!: termkit.TextBuffer;
+  protected scrollOffset: number = 0;
+  protected lastLineCount: number = 0;
 
   constructor(terminal: termkit.Terminal) {
     this.terminal = terminal;
