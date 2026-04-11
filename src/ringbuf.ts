@@ -25,6 +25,13 @@ export class RingBuffer<T> {
   }
 
   toArray(): T[] {
+    if (this.size === 0) return [];
+
+    const endIndex = this.head + this.size;
+    if (endIndex <= this.cap) {
+      return this.buffer.slice(this.head, endIndex) as T[];
+    }
+
     const result = new Array<T>(this.size);
     for (let i = 0; i < this.size; i++) {
       result[i] = this.buffer[(this.head + i) % this.cap] as T;

@@ -2,15 +2,15 @@ import termkit from 'terminal-kit';
 import type { PackageState } from '../types.js';
 
 export class LogView {
-  private terminal: termkit.Terminal;
-  private currentState: PackageState | undefined;
-  private leftPos: number;
-  private width: number;
-  private height: number;
-  private screenBuffer: termkit.ScreenBuffer | null = null;
-  private textBuffer: termkit.TextBuffer | null = null;
-  private scrollOffset: number = 0;
-  private lastLineCount: number = 0;
+  protected terminal: termkit.Terminal;
+  protected currentState: PackageState | undefined;
+  protected leftPos: number;
+  protected width: number;
+  protected height: number;
+  protected screenBuffer!: termkit.ScreenBuffer;
+  protected textBuffer!: termkit.TextBuffer;
+  protected scrollOffset: number = 0;
+  protected lastLineCount: number = 0;
 
   constructor(terminal: termkit.Terminal) {
     this.terminal = terminal;
@@ -49,27 +49,22 @@ export class LogView {
   }
 
   private render(): void {
-    if (!this.screenBuffer || !this.textBuffer) return;
-
-    const contentHeight = this.height - 2;
-
     this.drawBorders();
     this.screenBuffer.clear();
 
     if (!this.currentState) {
-      this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
+      this.screenBuffer.draw({ x: this.leftPos + 1, y: 2 });
       return;
     }
 
+    const contentHeight = this.height - 2;
     const lines = this.currentState.logs.toArray();
-
     if (lines.length === 0) {
-      this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
+      this.screenBuffer.draw({ x: this.leftPos + 1, y: 2 });
       return;
     }
 
     this.textBuffer.setText(lines.join('\n'), 'ansi');
-
     const totalLines = this.textBuffer.buffer.length;
 
     // If scrolled up, adjust offset to compensate for new lines
@@ -81,26 +76,19 @@ export class LogView {
     }
 
     const maxScroll = Math.max(0, totalLines - contentHeight);
-
-    // Clamp scrollOffset
-    this.scrollOffset = Math.min(this.scrollOffset, maxScroll);
+    this.scrollOffset = Math.min(Math.max(this.scrollOffset, 0), maxScroll);
 
     let offsetY = 0;
     if (this.scrollOffset === 0) {
-      // At bottom - show most recent
       if (totalLines > contentHeight) {
         offsetY = -(totalLines - contentHeight);
       }
     } else {
-      // Scrolled up
       offsetY = -(totalLines - contentHeight - this.scrollOffset);
     }
 
     this.textBuffer.draw({ y: offsetY });
-
-    this.screenBuffer.draw({ dst: this.terminal, x: this.leftPos + 1, y: 2 });
-
-    // Update last line count (wrapped) for next append
+    this.screenBuffer.draw({ x: this.leftPos + 1, y: 2 });
     this.lastLineCount = totalLines;
   }
 
@@ -168,7 +156,7 @@ export class LogView {
     if (direction === -1) {
       this.scrollOffset++;
     } else {
-      this.scrollOffset = Math.max(0, this.scrollOffset - 1);
+      this.scrollOffset--;
     }
     this.render();
   }
@@ -179,7 +167,7 @@ export class LogView {
     if (direction === -1) {
       this.scrollOffset += pageSize;
     } else {
-      this.scrollOffset = Math.max(0, this.scrollOffset - pageSize);
+      this.scrollOffset -= pageSize;
     }
     this.render();
   }
